@@ -99,7 +99,6 @@ mod tests {
 
     #[test]
     fn create_o_shape() {
-
         let f = Tetromino::new(Shape::OShape);
         assert_eq!(f.shape, Shape::OShape);
         assert_eq!(f.layout, [[0, 0, 0, 0], [0, 1, 1, 0], [0, 1, 1, 0], [0, 0, 0, 0]]);
