@@ -61,6 +61,14 @@ impl Playfield {
             self.storage[coords.row as usize][coords.col as usize]
         }
     }
+
+    pub fn shape_row(self: &Self, row: i8) -> &[figures::Shape] {
+        &self.storage[row as usize]
+    }
+
+    pub fn new(storage: Storage) -> Playfield {
+        Playfield{storage: storage}
+    }
 }
 
 #[cfg(test)]
@@ -115,5 +123,15 @@ mod tests {
         assert_eq!(playfield.can_place(&tetro, Coords{col: 0, row: 0}), false);
         // doesn't fit horizontally
         assert_eq!(playfield.can_place(&tetro, Coords{col: WIDTH - 1, row: 5}), false);
+    }
+
+    #[test]
+    fn shape_at_row() {
+        let storage: Storage = Default::default();
+        let playfield: Playfield = Playfield{storage: storage};
+
+        for s in playfield.shape_row(0) {
+            assert_eq!(*s, figures::Shape::NoShape);
+        }
     }
 }
