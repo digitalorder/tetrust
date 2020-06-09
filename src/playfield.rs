@@ -1,7 +1,7 @@
 use crate::figures::*;
 
-const WIDTH: i8 = 10;
-const HEIGHT: i8 = 20;
+pub const WIDTH: i8 = 10;
+pub const HEIGHT: i8 = 20;
 const TOTAL_HEIGHT: i8 = 30;
 
 pub type Storage = [[figures::Shape; WIDTH as usize]; TOTAL_HEIGHT as usize];
@@ -14,8 +14,8 @@ pub struct OutOfBoundsError;
 
 #[derive(Copy, Clone)]
 pub struct Coords {
-    row: i8,
-    col: i8,
+    pub row: i8,
+    pub col: i8,
 }
 
 impl Playfield {
