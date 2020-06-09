@@ -4,7 +4,7 @@ const WIDTH: i8 = 10;
 const HEIGHT: i8 = 20;
 const TOTAL_HEIGHT: i8 = 30;
 
-type Storage = [[Option<figures::Shape>; WIDTH as usize]; TOTAL_HEIGHT as usize];
+pub type Storage = [[figures::Shape; WIDTH as usize]; TOTAL_HEIGHT as usize];
 
 pub struct Playfield {
     storage: Storage,
@@ -26,7 +26,7 @@ impl Playfield {
                     if figure.layout[row][col] != 0 {
                         // already checked that it can be placed, so just place it
                         // rows are counted from bottom to top, so index should be reverted
-                        self.storage[(coords.row as usize) - row][(coords.col as usize) + col] = Some(figure.shape);
+                        self.storage[(coords.row as usize) - row][(coords.col as usize) + col] = figure.shape;
                     }
                 }
             }
@@ -50,13 +50,13 @@ impl Playfield {
                 }
             }
         };
-       
+
         true
     }
 
-    pub fn shape_at(self: &Self, coords: Coords) -> Option<figures::Shape> {
+    pub fn shape_at(self: &Self, coords: Coords) -> figures::Shape {
         if coords.col < 0 || coords.col > WIDTH || coords.row < 0 || coords.row > HEIGHT {
-            None
+            figures::Shape::NoShape
         } else {
             self.storage[coords.row as usize][coords.col as usize]
         }
@@ -72,8 +72,8 @@ mod tests {
         let storage: Storage = Default::default();
         let playfield: Playfield = Playfield{storage: storage};
 
-        assert_eq!(playfield.shape_at(Coords{col: 0, row: 0}), None);
-        assert_eq!(playfield.shape_at(Coords{col: WIDTH + 1, row: HEIGHT + 1}), None);
+        assert_eq!(playfield.shape_at(Coords{col: 0, row: 0}), figures::Shape::NoShape);
+        assert_eq!(playfield.shape_at(Coords{col: WIDTH + 1, row: HEIGHT + 1}), figures::Shape::NoShape);
     }
 
     #[test]
@@ -87,22 +87,22 @@ mod tests {
         assert_eq!(place_result.is_ok(), true);
 
         // check for every position that shape is either OShape or None
-        assert_eq!(playfield.shape_at(Coords{..place_coords}), None);
-        assert_eq!(playfield.shape_at(Coords{col: place_coords.col + 1, row: place_coords.row}), None);
-        assert_eq!(playfield.shape_at(Coords{col: place_coords.col + 2, row: place_coords.row}), None);
-        assert_eq!(playfield.shape_at(Coords{col: place_coords.col + 3, row: place_coords.row}), None);
-        assert_eq!(playfield.shape_at(Coords{col: place_coords.col, row: place_coords.row - 1}), None);
-        assert_eq!(playfield.shape_at(Coords{col: place_coords.col + 1, row: place_coords.row - 1}), Some(figures::Shape::OShape));
-        assert_eq!(playfield.shape_at(Coords{col: place_coords.col + 2, row: place_coords.row - 1}), Some(figures::Shape::OShape));
-        assert_eq!(playfield.shape_at(Coords{col: place_coords.col + 3, row: place_coords.row - 1}), None);
-        assert_eq!(playfield.shape_at(Coords{col: place_coords.col, row: place_coords.row - 2}), None);
-        assert_eq!(playfield.shape_at(Coords{col: place_coords.col + 1, row: place_coords.row - 2}), Some(figures::Shape::OShape));
-        assert_eq!(playfield.shape_at(Coords{col: place_coords.col + 2, row: place_coords.row - 2}), Some(figures::Shape::OShape));
-        assert_eq!(playfield.shape_at(Coords{col: place_coords.col + 3, row: place_coords.row - 2}), None);
-        assert_eq!(playfield.shape_at(Coords{col: place_coords.col, row: place_coords.row - 3}), None);
-        assert_eq!(playfield.shape_at(Coords{col: place_coords.col + 1, row: place_coords.row - 3}), None);
-        assert_eq!(playfield.shape_at(Coords{col: place_coords.col + 2, row: place_coords.row - 3}), None);
-        assert_eq!(playfield.shape_at(Coords{col: place_coords.col + 3, row: place_coords.row - 3}), None);
+        assert_eq!(playfield.shape_at(Coords{..place_coords}), figures::Shape::NoShape);
+        assert_eq!(playfield.shape_at(Coords{col: place_coords.col + 1, row: place_coords.row}), figures::Shape::NoShape);
+        assert_eq!(playfield.shape_at(Coords{col: place_coords.col + 2, row: place_coords.row}), figures::Shape::NoShape);
+        assert_eq!(playfield.shape_at(Coords{col: place_coords.col + 3, row: place_coords.row}), figures::Shape::NoShape);
+        assert_eq!(playfield.shape_at(Coords{col: place_coords.col, row: place_coords.row - 1}), figures::Shape::NoShape);
+        assert_eq!(playfield.shape_at(Coords{col: place_coords.col + 1, row: place_coords.row - 1}), figures::Shape::OShape);
+        assert_eq!(playfield.shape_at(Coords{col: place_coords.col + 2, row: place_coords.row - 1}), figures::Shape::OShape);
+        assert_eq!(playfield.shape_at(Coords{col: place_coords.col + 3, row: place_coords.row - 1}), figures::Shape::NoShape);
+        assert_eq!(playfield.shape_at(Coords{col: place_coords.col, row: place_coords.row - 2}), figures::Shape::NoShape);
+        assert_eq!(playfield.shape_at(Coords{col: place_coords.col + 1, row: place_coords.row - 2}), figures::Shape::OShape);
+        assert_eq!(playfield.shape_at(Coords{col: place_coords.col + 2, row: place_coords.row - 2}), figures::Shape::OShape);
+        assert_eq!(playfield.shape_at(Coords{col: place_coords.col + 3, row: place_coords.row - 2}), figures::Shape::NoShape);
+        assert_eq!(playfield.shape_at(Coords{col: place_coords.col, row: place_coords.row - 3}), figures::Shape::NoShape);
+        assert_eq!(playfield.shape_at(Coords{col: place_coords.col + 1, row: place_coords.row - 3}), figures::Shape::NoShape);
+        assert_eq!(playfield.shape_at(Coords{col: place_coords.col + 2, row: place_coords.row - 3}), figures::Shape::NoShape);
+        assert_eq!(playfield.shape_at(Coords{col: place_coords.col + 3, row: place_coords.row - 3}), figures::Shape::NoShape);
     }
 
     #[test]

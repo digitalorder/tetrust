@@ -1,6 +1,7 @@
 pub mod figures {
     #[derive(Copy, Clone, PartialEq, Debug)]
     pub enum Shape {
+        NoShape,
         OShape,
         IShape,
         TShape,
@@ -8,6 +9,10 @@ pub mod figures {
         LShape,
         SShape,
         ZShape,
+    }
+
+    impl Default for Shape {
+        fn default() -> Self { Shape::NoShape }
     }
 
     pub type Layout = [[u8; 4]; 4];
@@ -87,6 +92,7 @@ pub mod figures {
                 Shape::LShape => [[0, 0, 0, 0], [1, 1, 1, 0], [1, 0, 0, 0], [0, 0, 0, 0]],
                 Shape::SShape => [[0, 0, 0, 0], [0, 1, 1, 0], [1, 1, 0, 0], [0, 0, 0, 0]],
                 Shape::ZShape => [[0, 0, 0, 0], [1, 1, 0, 0], [0, 1, 1, 0], [0, 0, 0, 0]],
+                Shape::NoShape => [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
             };
             Tetromino {shape: shape, layout: layout}
         }
