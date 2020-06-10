@@ -7,7 +7,7 @@ const TOTAL_HEIGHT: i8 = 30;
 pub type Storage = [[figures::Shape; WIDTH as usize]; TOTAL_HEIGHT as usize];
 
 pub struct Playfield {
-    storage: Storage,
+    pub storage: Storage,
 }
 
 pub struct OutOfBoundsError;
