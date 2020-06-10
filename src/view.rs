@@ -1,22 +1,20 @@
 use crate::playfield::Playfield;
 use crate::playfield::WIDTH as WIDTH;
-use crate::playfield::HEIGHT as HEIGHT;
 use crate::figures::figures::Shape as Shape;
 
-pub struct View {
-    playfield: Playfield,
+pub type Row = [char; WIDTH as usize];
+pub struct ConsoleView {
 }
 
-pub type Row = [char; WIDTH as usize];
+pub trait View {
+    fn show_row(&self, playfield: &Playfield, row: i8) -> Row;
+    /* TODO: add rows iterator */
+}
 
-impl View {
-    pub fn new(playfield: Playfield) -> View {
-        View{playfield: playfield}
-    }
-
-    pub fn show_row(self: &Self, row: i8) -> Row {
+impl View for ConsoleView {
+    fn show_row(&self, playfield: &Playfield, row: i8) -> Row {
         let mut result: Row = [' '; WIDTH as usize];
-        for (i, s) in self.playfield.shape_row(row).iter().enumerate() {
+        for (i, s) in playfield.shape_row(row).iter().enumerate() {
             let value = match s {
                 Shape::NoShape => ' ',
                 Shape::OShape => 'o',
@@ -31,18 +29,6 @@ impl View {
         }
         result
     }
-
-    pub fn show_rows(self: &Self) -> [Row; HEIGHT as usize] {
-        let mut result: [Row; HEIGHT as usize] = [[' '; WIDTH as usize]; HEIGHT as usize];
-
-        for i in 0..HEIGHT {
-            result[i as usize] = self.show_row(i as i8);
-        }
-
-        result
-    }
-    // pub fn rows(self: &Self) -> impl Iterator<Item = &Row> {
-    // }
 }
 
 #[cfg(test)]
@@ -51,35 +37,34 @@ mod tests {
     use crate::playfield::Storage as Storage;
     use crate::figures::figures;
     use crate::playfield::Coords;
+    use crate::playfield::HEIGHT as HEIGHT;
 
     #[test]
     fn show_empty_view() {
-        let storage: Storage = Default::default();
-        let playfield: Playfield = Playfield::new(storage);
-        let view: View = View::new(playfield);
+        let playfield: Playfield = Playfield::new(Storage::default());
+        let view: ConsoleView = ConsoleView{};
 
         for i in 0..HEIGHT {
-            let row: String = view.show_row(i).iter().collect();
+            let row: String = view.show_row(&playfield, i).iter().collect();
             assert_eq!(row, "          ");
         }
     }
 
     #[test]
     fn show_one_tetramino() {
-        let storage: Storage = Default::default();
-        let playfield: Playfield = Playfield::new(storage);
-        let mut view: View = View::new(playfield);
-        let place_result = view.playfield.place(
+        let mut playfield: Playfield = Playfield::new(Storage::default());
+        let view: ConsoleView = ConsoleView{};
+        let place_result = playfield.place(
             &figures::Tetromino::new(figures::Shape::OShape),
             Coords{col: 5, row: 2}
         );
         assert_eq!(place_result.is_ok(), true);
-        let place_result = view.playfield.place(
+        let place_result = playfield.place(
             &figures::Tetromino::new(figures::Shape::TShape),
             Coords{col: 0, row: 5}
         );
         assert_eq!(place_result.is_ok(), true);
-        let place_result = view.playfield.place(
+        let place_result = playfield.place(
             &figures::Tetromino::new(figures::Shape::LShape),
             Coords{col: 2, row: 4}
         );
@@ -108,7 +93,7 @@ mod tests {
             "          "];
 
         for i in 0..HEIGHT {
-            let row: String = view.show_row(i).iter().collect();
+            let row: String = view.show_row(&playfield, i).iter().collect();
             assert_eq!(row, result[i as usize], "Line number {}", i);
         }
     }
