@@ -15,7 +15,9 @@ pub mod figures {
         fn default() -> Self { Shape::NoShape }
     }
 
-    pub type Layout = [[u8; 4]; 4];
+    pub const LAYOUT_WIDTH: i8 = 4;
+    pub const LAYOUT_HEIGHT: i8 = 4;
+    pub type Layout = [[u8; LAYOUT_WIDTH as usize]; LAYOUT_HEIGHT as usize];
 
     pub struct Tetromino {
         pub shape: Shape,

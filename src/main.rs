@@ -3,7 +3,7 @@ use tetrust::view;
 use tetrust::playfield;
 
 fn main() {
-    let playfield = playfield::Playfield{storage: playfield::Storage::default()};
+    let playfield = playfield::Playfield::new(Default::default());
     let view = view::ConsoleView{};
     let mut game = engine::new_game(playfield, &view);
 

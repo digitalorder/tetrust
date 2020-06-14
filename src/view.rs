@@ -1,5 +1,6 @@
 use crate::playfield::Playfield;
 use crate::playfield::WIDTH as WIDTH;
+use crate::playfield::Coords as Coords;
 use crate::figures::figures::Shape as Shape;
 
 pub type Row = [char; WIDTH as usize];
@@ -14,8 +15,8 @@ pub trait View {
 impl View for ConsoleView {
     fn show_row(&self, playfield: &Playfield, row: i8) -> Row {
         let mut result: Row = [' '; WIDTH as usize];
-        for (i, s) in playfield.shape_row(row).iter().enumerate() {
-            let value = match s {
+        for i in 0..WIDTH as usize {
+            let value = match playfield.shape_at(&Coords{row: row, col: i as i8}) {
                 Shape::NoShape => ' ',
                 Shape::OShape => 'o',
                 Shape::IShape => 'i',
@@ -64,10 +65,7 @@ mod tests {
             Coords{col: 0, row: 5}
         );
         assert_eq!(place_result.is_ok(), true);
-        let place_result = playfield.place(
-            &figures::Tetromino::new(figures::Shape::LShape),
-            Coords{col: 2, row: 4}
-        );
+        let place_result = playfield.new_active(figures::Shape::LShape, &Coords{col: 2, row: 4});
         assert_eq!(place_result.is_ok(), true);
 
         let result: [&'static str; HEIGHT as usize] = [

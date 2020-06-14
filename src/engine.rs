@@ -6,14 +6,14 @@ pub mod engine {
     pub struct Game<'a> {
         playfield: playfield::Playfield,
         view: &'a dyn View,
-        active_shape: figures::Tetromino,
-        active_coords: playfield::Coords,
+        active_tetro: playfield::ActiveTetromino,
     }
 
     pub fn new_game(playfield: playfield::Playfield, view: &impl View) -> Game {
-        Game{view: view, playfield: playfield,
-            active_shape: figures::Tetromino::new(figures::Shape::NoShape),
-            active_coords: playfield::Coords{row: 0, col: 0}
+        Game{
+            view: view,
+            playfield: playfield,
+            active_tetro: Default::default(),
         }
     }
 
@@ -31,12 +31,12 @@ pub mod engine {
     }
 
     pub fn calculate_frame(game: &mut Game) {
-        if game.active_shape.shape == figures::Shape::NoShape {
-            game.active_shape = figures::Tetromino::new(figures::Shape::OShape);
-            game.active_coords = playfield::Coords{row: playfield::HEIGHT,
-                                                   col: playfield::WIDTH / 2 - 2};
+        if game.active_tetro.shape == figures::Shape::NoShape {
+            let _ = game.playfield.new_active(
+                figures::Shape::OShape,
+                &playfield::Coords{row: playfield::HEIGHT,
+                    col: playfield::WIDTH / 2 - 2}
+            );
         }
-
-        let _ = game.playfield.place(&game.active_shape, game.active_coords);
     }
 }
