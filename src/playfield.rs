@@ -83,15 +83,24 @@ impl Playfield {
         true
     }
 
-    pub fn shape_at(self: &Self, coords: &Coords) -> figures::Shape {
+    /**
+     * \brief Get shape stored at given coordinates.
+     *
+     * \param self Reference to playfield instance.
+     * \param coords Coordinates to check.
+     *
+     * \return A tuple. First item is shape for given coordinate or figures::Shape::NoShape.
+     * Second item is true if given shape belongs to active tetromino.
+     */
+    pub fn shape_at(self: &Self, coords: &Coords) -> (figures::Shape, bool) {
         if coords.col < 0 || coords.col > WIDTH || coords.row < 0 || coords.row > HEIGHT {
-            figures::Shape::NoShape
+            (figures::Shape::NoShape, false)
         } else {
             let (inside, active_coords) = self.inside_active_tetro(&coords);
             if inside && (self.storage.active_layout[active_coords.row as usize][active_coords.col as usize] == 1) {
-                self.active_tetro.shape
+                (self.active_tetro.shape, true)
             } else {
-                self.storage.playfield[coords.row as usize][coords.col as usize]
+                (self.storage.playfield[coords.row as usize][coords.col as usize], false)
             }
         }
     }
@@ -142,8 +151,8 @@ mod tests {
     fn shape_at_in_and_outside_bounds() {
         let playfield: Playfield = Playfield::new(Default::default());
 
-        assert_eq!(playfield.shape_at(&Coords{col: 0, row: 0}), figures::Shape::NoShape);
-        assert_eq!(playfield.shape_at(&Coords{col: WIDTH + 1, row: HEIGHT + 1}), figures::Shape::NoShape);
+        assert_eq!(playfield.shape_at(&Coords{col: 0, row: 0}), (figures::Shape::NoShape, false));
+        assert_eq!(playfield.shape_at(&Coords{col: WIDTH + 1, row: HEIGHT + 1}), (figures::Shape::NoShape, false));
     }
 
     #[test]
@@ -156,22 +165,22 @@ mod tests {
         assert_eq!(place_result.is_ok(), true);
 
         // check for every position that shape is either OShape or None
-        assert_eq!(playfield.shape_at(&Coords{..place_coords}), figures::Shape::NoShape);
-        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col + 1, row: place_coords.row}), figures::Shape::NoShape);
-        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col + 2, row: place_coords.row}), figures::Shape::NoShape);
-        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col + 3, row: place_coords.row}), figures::Shape::NoShape);
-        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col, row: place_coords.row - 1}), figures::Shape::NoShape);
-        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col + 1, row: place_coords.row - 1}), figures::Shape::OShape);
-        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col + 2, row: place_coords.row - 1}), figures::Shape::OShape);
-        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col + 3, row: place_coords.row - 1}), figures::Shape::NoShape);
-        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col, row: place_coords.row - 2}), figures::Shape::NoShape);
-        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col + 1, row: place_coords.row - 2}), figures::Shape::OShape);
-        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col + 2, row: place_coords.row - 2}), figures::Shape::OShape);
-        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col + 3, row: place_coords.row - 2}), figures::Shape::NoShape);
-        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col, row: place_coords.row - 3}), figures::Shape::NoShape);
-        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col + 1, row: place_coords.row - 3}), figures::Shape::NoShape);
-        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col + 2, row: place_coords.row - 3}), figures::Shape::NoShape);
-        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col + 3, row: place_coords.row - 3}), figures::Shape::NoShape);
+        assert_eq!(playfield.shape_at(&Coords{..place_coords}), (figures::Shape::NoShape, false));
+        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col + 1, row: place_coords.row}), (figures::Shape::NoShape, false));
+        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col + 2, row: place_coords.row}), (figures::Shape::NoShape, false));
+        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col + 3, row: place_coords.row}), (figures::Shape::NoShape, false));
+        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col, row: place_coords.row - 1}), (figures::Shape::NoShape, false));
+        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col + 1, row: place_coords.row - 1}), (figures::Shape::OShape, false));
+        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col + 2, row: place_coords.row - 1}), (figures::Shape::OShape, false));
+        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col + 3, row: place_coords.row - 1}), (figures::Shape::NoShape, false));
+        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col, row: place_coords.row - 2}), (figures::Shape::NoShape, false));
+        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col + 1, row: place_coords.row - 2}), (figures::Shape::OShape, false));
+        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col + 2, row: place_coords.row - 2}), (figures::Shape::OShape, false));
+        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col + 3, row: place_coords.row - 2}), (figures::Shape::NoShape, false));
+        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col, row: place_coords.row - 3}), (figures::Shape::NoShape, false));
+        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col + 1, row: place_coords.row - 3}), (figures::Shape::NoShape, false));
+        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col + 2, row: place_coords.row - 3}), (figures::Shape::NoShape, false));
+        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col + 3, row: place_coords.row - 3}), (figures::Shape::NoShape, false));
     }
 
     #[test]
@@ -182,22 +191,22 @@ mod tests {
         assert_eq!(create_result.is_ok(), true);
 
         // check for every position that shape is either OShape or None
-        assert_eq!(playfield.shape_at(&Coords{..create_coords}), figures::Shape::NoShape);
-        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col + 1, row: create_coords.row}), figures::Shape::NoShape);
-        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col + 2, row: create_coords.row}), figures::Shape::NoShape);
-        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col + 3, row: create_coords.row}), figures::Shape::NoShape);
-        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col, row: create_coords.row - 1}), figures::Shape::NoShape);
-        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col + 1, row: create_coords.row - 1}), figures::Shape::OShape);
-        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col + 2, row: create_coords.row - 1}), figures::Shape::OShape);
-        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col + 3, row: create_coords.row - 1}), figures::Shape::NoShape);
-        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col, row: create_coords.row - 2}), figures::Shape::NoShape);
-        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col + 1, row: create_coords.row - 2}), figures::Shape::OShape);
-        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col + 2, row: create_coords.row - 2}), figures::Shape::OShape);
-        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col + 3, row: create_coords.row - 2}), figures::Shape::NoShape);
-        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col, row: create_coords.row - 3}), figures::Shape::NoShape);
-        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col + 1, row: create_coords.row - 3}), figures::Shape::NoShape);
-        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col + 2, row: create_coords.row - 3}), figures::Shape::NoShape);
-        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col + 3, row: create_coords.row - 3}), figures::Shape::NoShape);
+        assert_eq!(playfield.shape_at(&Coords{..create_coords}), (figures::Shape::NoShape, false));
+        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col + 1, row: create_coords.row}), (figures::Shape::NoShape, false));
+        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col + 2, row: create_coords.row}), (figures::Shape::NoShape, false));
+        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col + 3, row: create_coords.row}), (figures::Shape::NoShape, false));
+        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col, row: create_coords.row - 1}), (figures::Shape::NoShape, false));
+        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col + 1, row: create_coords.row - 1}), (figures::Shape::OShape, true));
+        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col + 2, row: create_coords.row - 1}), (figures::Shape::OShape, true));
+        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col + 3, row: create_coords.row - 1}), (figures::Shape::NoShape, false));
+        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col, row: create_coords.row - 2}), (figures::Shape::NoShape, false));
+        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col + 1, row: create_coords.row - 2}), (figures::Shape::OShape, true));
+        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col + 2, row: create_coords.row - 2}), (figures::Shape::OShape, true));
+        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col + 3, row: create_coords.row - 2}), (figures::Shape::NoShape, false));
+        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col, row: create_coords.row - 3}), (figures::Shape::NoShape, false));
+        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col + 1, row: create_coords.row - 3}), (figures::Shape::NoShape, false));
+        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col + 2, row: create_coords.row - 3}), (figures::Shape::NoShape, false));
+        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col + 3, row: create_coords.row - 3}), (figures::Shape::NoShape, false));
     }
 
     #[test]

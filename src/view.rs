@@ -16,7 +16,8 @@ impl View for ConsoleView {
     fn show_row(&self, playfield: &Playfield, row: i8) -> Row {
         let mut result: Row = [' '; WIDTH as usize];
         for i in 0..WIDTH as usize {
-            let value = match playfield.shape_at(&Coords{row: row, col: i as i8}) {
+            let (shape, is_active) = playfield.shape_at(&Coords{row: row, col: i as i8});
+            let mut value: char = match shape {
                 Shape::NoShape => ' ',
                 Shape::OShape => 'o',
                 Shape::IShape => 'i',
@@ -26,6 +27,10 @@ impl View for ConsoleView {
                 Shape::SShape => 's',
                 Shape::ZShape => 'z',
             };
+
+            if is_active {
+                value.make_ascii_uppercase();
+            }
             result[i] = value;
         }
         result
@@ -71,8 +76,8 @@ mod tests {
         let result: [&'static str; HEIGHT as usize] = [
             "      oo  ",
             "      oo  ",
-            "  l       ",
-            " tlll     ",
+            "  L       ",
+            " tLLL     ",
             "ttt       ",
             "          ",
             "          ",
