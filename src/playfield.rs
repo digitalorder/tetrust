@@ -34,6 +34,13 @@ impl Default for ActiveTetromino {
     }
 }
 
+pub enum Dir {
+    Down,
+    Left,
+    Right,
+    Rotate,
+}
+
 pub struct Playfield {
     pub storage: Storage,
     active_tetro: ActiveTetromino,
@@ -105,14 +112,14 @@ impl Playfield {
         }
     }
 
-    pub fn new_active(self: &mut Self, shape: figures::Shape, coords: &Coords) -> Result<(&ActiveTetromino), OutOfBoundsError> {
+    pub fn new_active(self: &mut Self, shape: figures::Shape, coords: &Coords) -> Result<(), OutOfBoundsError> {
         let figure = figures::Tetromino::new(shape);
 
         if self.can_place(&figure, &coords) {
             self.active_tetro.coords = *coords;
             self.active_tetro.shape = shape;
             self.storage.active_layout = figure.layout;
-            Ok(&self.active_tetro)
+            Ok(())
         } else {
             Err(OutOfBoundsError{})
         }
@@ -123,6 +130,21 @@ impl Playfield {
             &figures::Tetromino{shape: self.active_tetro.shape, layout: self.storage.active_layout},
             self.active_tetro.coords
         )
+    }
+
+    pub fn move_active(self: &mut Self, dir: Dir) -> bool {
+        let new_coords = match dir {
+            Dir::Down => Coords{col: self.active_tetro.coords.col, row: self.active_tetro.coords.row - 1},
+            _ => self.active_tetro.coords,
+        };
+        let figure = figures::Tetromino{shape: self.active_tetro.shape, layout: self.storage.active_layout};
+
+        if self.can_place(&figure, &new_coords) {
+            self.active_tetro.coords = new_coords;
+            return true;
+        }
+
+        false
     }
 
     fn inside_active_tetro(self: &Self, coords: &Coords) -> (bool, Coords) {

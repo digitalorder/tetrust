@@ -3,17 +3,30 @@ pub mod engine {
     use crate::playfield as playfield;
     use crate::figures::figures as figures;
 
+    #[derive(PartialEq)]
+    enum State {
+        Dropped,
+        ActiveTetro,
+        Touched,
+        End,
+    }
+
+    #[derive(PartialEq)]
+    pub enum Event {
+        Timeout,
+    }
+
     pub struct Game<'a> {
         playfield: playfield::Playfield,
         view: &'a dyn View,
-        active_tetro: playfield::ActiveTetromino,
+        state: State,
     }
 
     pub fn new_game(playfield: playfield::Playfield, view: &impl View) -> Game {
         Game{
             view: view,
             playfield: playfield,
-            active_tetro: Default::default(),
+            state: State::Dropped,
         }
     }
 
@@ -30,13 +43,30 @@ pub mod engine {
         println!("+----------+");
     }
 
-    pub fn calculate_frame(game: &mut Game) {
-        if game.active_tetro.shape == figures::Shape::NoShape {
-            let _ = game.playfield.new_active(
-                figures::Shape::OShape,
-                &playfield::Coords{row: playfield::HEIGHT,
-                    col: playfield::WIDTH / 2 - 2}
+    pub fn calculate_frame(game: &mut Game, event: Event) {
+        if event == Event::Timeout {
+            if game.state == State::Dropped {
+                match game.playfield.new_active(
+                    figures::Shape::OShape,
+                    &playfield::Coords{row: playfield::HEIGHT,
+                        col: playfield::WIDTH / 2 - 2}
+                ) {
+                    Ok(()) => {
             );
+                        game.state = State::ActiveTetro
+                    },
+                    Err(_) => {
+                        game.state = State::End
+                    }
+                };
+            } else if game.state == State::ActiveTetro {
+                if !game.playfield.move_active(playfield::Dir::Down) {
+                    let _ = game.playfield.place_active();
+                    game.state = State::Touched;
+                }
+            } else if game.state == State::Touched {
+                game.state = State::Dropped;
+            }
         }
     }
 }
