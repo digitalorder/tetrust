@@ -80,7 +80,7 @@ impl Playfield {
                     if row as i8 > coords.row || coords.row >= row as i8 + TOTAL_HEIGHT {
                         return false;
                     }
-                    if coords.col + col as i8 >= WIDTH {
+                    if coords.col + (col as i8) >= WIDTH || coords.col + (col as i8) < 0 {
                         return false;
                     }
                 }
@@ -135,6 +135,8 @@ impl Playfield {
     pub fn move_active(self: &mut Self, dir: Dir) -> bool {
         let new_coords = match dir {
             Dir::Down => Coords{col: self.active_tetro.coords.col, row: self.active_tetro.coords.row - 1},
+            Dir::Left => Coords{col: self.active_tetro.coords.col - 1, row: self.active_tetro.coords.row},
+            Dir::Right => Coords{col: self.active_tetro.coords.col + 1, row: self.active_tetro.coords.row},
             _ => self.active_tetro.coords,
         };
         let figure = figures::Tetromino{shape: self.active_tetro.shape, layout: self.storage.active_layout};
@@ -229,6 +231,26 @@ mod tests {
         assert_eq!(playfield.shape_at(&Coords{col: create_coords.col + 1, row: create_coords.row - 3}), (figures::Shape::NoShape, false));
         assert_eq!(playfield.shape_at(&Coords{col: create_coords.col + 2, row: create_coords.row - 3}), (figures::Shape::NoShape, false));
         assert_eq!(playfield.shape_at(&Coords{col: create_coords.col + 3, row: create_coords.row - 3}), (figures::Shape::NoShape, false));
+    }
+
+    #[test]
+    fn bounce_left_wall() {
+        let mut playfield: Playfield = Playfield::new(Default::default());
+        let create_coords = Coords{col: -1, row: 10};
+        let create_result = playfield.new_active(figures::Shape::OShape, &create_coords);
+        assert_eq!(create_result.is_ok(), true);
+        let move_result = playfield.move_active(Dir::Left);
+        assert_eq!(move_result, false);
+    }
+
+    #[test]
+    fn bounce_right_wall() {
+        let mut playfield: Playfield = Playfield::new(Default::default());
+        let create_coords = Coords{col: WIDTH - 3, row: 10};
+        let create_result = playfield.new_active(figures::Shape::OShape, &create_coords);
+        assert_eq!(create_result.is_ok(), true);
+        let move_result = playfield.move_active(Dir::Right);
+        assert_eq!(move_result, false);
     }
 
     #[test]

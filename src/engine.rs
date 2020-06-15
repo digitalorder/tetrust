@@ -2,18 +2,38 @@ pub mod engine {
     use crate::view::View as View;
     use crate::playfield as playfield;
     use crate::figures::figures as figures;
+    use std::fmt;
 
-    #[derive(PartialEq)]
-    enum State {
+    #[derive(Copy, Clone, PartialEq)]
+    pub enum State {
         Dropped,
         ActiveTetro,
         Touched,
         End,
     }
 
-    #[derive(PartialEq)]
+    #[derive(Copy, Clone, PartialEq)]
     pub enum Event {
         Timeout,
+        KeyLeft,
+        KeyRight,
+        KeyTurn,
+        KeyDown,
+        KeyExit
+    }
+
+    impl fmt::Display for Event {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            let result = match self {
+                Event::Timeout => "🕒",
+                Event::KeyLeft => "⬅️",
+                Event::KeyRight => "➡️",
+                Event::KeyExit => "🚪",
+                _ => "❓",
+            };
+
+            write!(f, "{}", result)
+        }
     }
 
     pub struct Game<'a> {
@@ -28,6 +48,10 @@ pub mod engine {
             playfield: playfield,
             state: State::Dropped,
         }
+    }
+
+    pub fn get_state(game: &Game) -> State {
+        game.state
     }
 
     pub fn draw_frame(game: &Game) {
@@ -52,7 +76,6 @@ pub mod engine {
                         col: playfield::WIDTH / 2 - 2}
                 ) {
                     Ok(()) => {
-            );
                         game.state = State::ActiveTetro
                     },
                     Err(_) => {
@@ -67,6 +90,10 @@ pub mod engine {
             } else if game.state == State::Touched {
                 game.state = State::Dropped;
             }
+        } else if event == Event::KeyLeft && (game.state == State::ActiveTetro || game.state == State::Touched) {
+            game.playfield.move_active(playfield::Dir::Left);
+        } else if event == Event::KeyRight && (game.state == State::ActiveTetro || game.state == State::Touched) {
+            game.playfield.move_active(playfield::Dir::Right);
         }
     }
 }
