@@ -83,6 +83,9 @@ impl Playfield {
                     if coords.col + (col as i8) >= WIDTH || coords.col + (col as i8) < 0 {
                         return false;
                     }
+                    if self.storage.playfield[(coords.row - row as i8) as usize][(coords.col + col as i8) as usize] != figures::Shape::NoShape {
+                        return false;
+                    }
                 }
             }
         };
@@ -258,6 +261,25 @@ mod tests {
         let mut playfield: Playfield = Playfield::new(Default::default());
         let create_coords = Coords{col: -1, row: 2};
         let create_result = playfield.new_active(figures::Shape::OShape, &create_coords);
+        assert_eq!(create_result.is_ok(), true);
+        let move_result = playfield.move_active(Dir::Down);
+        assert_eq!(move_result, false);
+        let place_result = playfield.place_active();
+        assert_eq!(place_result.is_ok(), true);
+    }
+
+    #[test]
+    fn down_on_top_of_placed_tetro() {
+        let mut playfield: Playfield = Playfield::new(Default::default());
+        let place_result = playfield.place(
+            &figures::Tetromino::new(figures::Shape::OShape),
+            Coords{col: -1, row: 2}
+        );
+        assert_eq!(place_result.is_ok(), true);
+        let create_result = playfield.new_active(
+            figures::Shape::OShape,
+            &Coords{col: -1, row: 4}
+        );
         assert_eq!(create_result.is_ok(), true);
         let move_result = playfield.move_active(Dir::Down);
         assert_eq!(move_result, false);
