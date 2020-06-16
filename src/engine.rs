@@ -12,6 +12,19 @@ pub mod engine {
         End,
     }
 
+    impl fmt::Display for State {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            let result = match self {
+                State::ActiveTetro => "active",
+                State::Touched => "touched",
+                State::Dropped => "dropped",
+                State::End => "end",
+            };
+
+            write!(f, "{}", result)
+        }
+    }
+
     #[derive(Copy, Clone, PartialEq)]
     pub enum Event {
         Timeout,
