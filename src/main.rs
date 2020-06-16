@@ -45,9 +45,9 @@ fn main() {
 
     while engine::get_state(&game) != engine::State::End {
         let event = rx.recv().unwrap();
-        engine::calculate_frame(&mut game, event);
         write!(stdout, "{}{}", termion::cursor::Goto(1, 1), termion::clear::All).unwrap();
         println!("Event: {}\r", event);
+        engine::calculate_frame(&mut game, event);
         engine::draw_frame(&game);
 
         if event == engine::Event::KeyExit {
