@@ -103,7 +103,7 @@ pub mod engine {
             State::Dropped => {
                 if event == Event::Timeout || event == Event::KeyDown {
                     match game.playfield.new_active(
-                        figures::Shape::OShape,
+                        figures::random_shape(),
                         &playfield::Coords{row: playfield::HEIGHT,
                             col: playfield::WIDTH / 2 - 2}
                     ) {

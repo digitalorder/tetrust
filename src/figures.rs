@@ -1,4 +1,7 @@
 pub mod figures {
+    extern crate rand;
+    use rand::prelude::*;
+
     #[derive(Copy, Clone, PartialEq, Debug)]
     pub enum Shape {
         NoShape,
@@ -13,6 +16,19 @@ pub mod figures {
 
     impl Default for Shape {
         fn default() -> Self { Shape::NoShape }
+    }
+
+    pub fn random_shape() -> Shape {
+        let mut rng = thread_rng();
+        match rng.gen_range(0, 7) {
+            0 => Shape::OShape,
+            1 => Shape::IShape,
+            2 => Shape::TShape,
+            3 => Shape::JShape,
+            4 => Shape::LShape,
+            5 => Shape::SShape,
+            _ => Shape::ZShape,
+        }
     }
 
     pub const LAYOUT_WIDTH: i8 = 4;
