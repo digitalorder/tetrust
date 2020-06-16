@@ -1,7 +1,9 @@
 use crate::playfield::Playfield;
 use crate::playfield::WIDTH as WIDTH;
+use crate::playfield::HEIGHT as HEIGHT;
 use crate::playfield::Coords as Coords;
 use crate::figures::figures::Shape as Shape;
+extern crate termion;
 
 pub type Row = [char; WIDTH as usize];
 pub struct ConsoleView {
@@ -9,6 +11,7 @@ pub struct ConsoleView {
 
 pub trait View {
     fn show_row(&self, playfield: &Playfield, row: i8) -> Row;
+    fn show_playfield(&self, playfield: &Playfield);
     /* TODO: add rows iterator */
 }
 
@@ -34,6 +37,33 @@ impl View for ConsoleView {
             result[i] = value;
         }
         result
+    }
+
+    fn show_playfield(&self, playfield: &Playfield) {
+        println!("{}┌────────────────────┐\r", termion::color::Bg(termion::color::Black));
+        for i in (0..HEIGHT).rev() {
+            print!("{}│", termion::color::Bg(termion::color::Black));
+            for col in 0..WIDTH {
+                let (shape, is_active) = playfield.shape_at(&Coords{row: i, col: col as i8});
+                let shift = match is_active {
+                    true => 8,
+                    false => 0,
+                };
+                let color: termion::color::AnsiValue = match shape {
+                    Shape::NoShape => termion::color::AnsiValue(0),
+                    Shape::OShape => termion::color::AnsiValue(1 + shift),
+                    Shape::IShape => termion::color::AnsiValue(2 + shift),
+                    Shape::TShape => termion::color::AnsiValue(3 + shift),
+                    Shape::JShape => termion::color::AnsiValue(4 + shift),
+                    Shape::LShape => termion::color::AnsiValue(5 + shift),
+                    Shape::SShape => termion::color::AnsiValue(6 + shift),
+                    Shape::ZShape => termion::color::AnsiValue(7 + shift),
+                };
+                print!("{}  ", termion::color::Bg(color));
+            }
+            print!("{}│\n\r", termion::color::Bg(termion::color::Black));
+        }
+        println!("└────────────────────┘\r");
     }
 }
 

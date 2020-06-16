@@ -69,16 +69,7 @@ pub mod engine {
     }
 
     pub fn draw_frame(game: &Game) {
-        println!("+----------+\r");
-        for i in (0..playfield::HEIGHT).rev() {
-            let row = game.view.show_row(&game.playfield, i);
-            print!("|");
-            for c in &row {
-                print!("{}", c);
-            }
-            print!("|\n\r");
-        }
-        println!("+----------+\r");
+        game.view.show_playfield(&game.playfield);
     }
 
     pub fn calculate_frame(game: &mut Game, event: Event) {
