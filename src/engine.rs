@@ -28,6 +28,7 @@ pub mod engine {
                 Event::Timeout => "🕒",
                 Event::KeyLeft => "⬅️",
                 Event::KeyRight => "➡️",
+                Event::KeyDown => "⬇️",
                 Event::KeyExit => "🚪",
                 _ => "❓",
             };
@@ -68,32 +69,41 @@ pub mod engine {
     }
 
     pub fn calculate_frame(game: &mut Game, event: Event) {
-        if event == Event::Timeout {
-            if game.state == State::Dropped {
-                match game.playfield.new_active(
-                    figures::Shape::OShape,
-                    &playfield::Coords{row: playfield::HEIGHT,
-                        col: playfield::WIDTH / 2 - 2}
-                ) {
-                    Ok(()) => {
-                        game.state = State::ActiveTetro
-                    },
-                    Err(_) => {
-                        game.state = State::End
+        match game.state {
+            State::ActiveTetro => {
+                if event == Event::Timeout || event == Event::KeyDown {
+                    if !game.playfield.move_active(playfield::Dir::Down) {
+                        let _ = game.playfield.place_active();
+                        game.state = State::Dropped;
                     }
-                };
-            } else if game.state == State::ActiveTetro {
-                if !game.playfield.move_active(playfield::Dir::Down) {
-                    let _ = game.playfield.place_active();
-                    game.state = State::Touched;
+                } else if event == Event::KeyLeft {
+                    game.playfield.move_active(playfield::Dir::Left);
+                } else if event == Event::KeyRight {
+                    game.playfield.move_active(playfield::Dir::Right);
                 }
-            } else if game.state == State::Touched {
+            },
+            State::Touched => {
                 game.state = State::Dropped;
+            },
+            State::Dropped => {
+                if event == Event::Timeout || event == Event::KeyDown {
+                    match game.playfield.new_active(
+                        figures::Shape::OShape,
+                        &playfield::Coords{row: playfield::HEIGHT,
+                            col: playfield::WIDTH / 2 - 2}
+                    ) {
+                        Ok(()) => {
+                            game.state = State::ActiveTetro
+                        },
+                        Err(_) => {
+                            game.state = State::End
+                        }
+                    };
+                }
+            },
+            State::End => {
+                /* do nothing for now */
             }
-        } else if event == Event::KeyLeft && (game.state == State::ActiveTetro || game.state == State::Touched) {
-            game.playfield.move_active(playfield::Dir::Left);
-        } else if event == Event::KeyRight && (game.state == State::ActiveTetro || game.state == State::Touched) {
-            game.playfield.move_active(playfield::Dir::Right);
         }
     }
 }
