@@ -62,7 +62,7 @@ impl Playfield {
                     if figure.layout[row][col] != 0 {
                         // already checked that it can be placed, so just place it
                         // rows are counted from bottom to top, so index should be reverted
-                        self.storage.playfield[(coords.row as usize) - row][(coords.col as usize) + col] = figure.shape;
+                        self.storage.playfield[(coords.row - row as i8) as usize][(coords.col + col as i8) as usize] = figure.shape;
                     }
                 }
             }
@@ -251,6 +251,18 @@ mod tests {
         assert_eq!(create_result.is_ok(), true);
         let move_result = playfield.move_active(Dir::Right);
         assert_eq!(move_result, false);
+    }
+
+    #[test]
+    fn down_in_bottom_left_corner() {
+        let mut playfield: Playfield = Playfield::new(Default::default());
+        let create_coords = Coords{col: -1, row: 2};
+        let create_result = playfield.new_active(figures::Shape::OShape, &create_coords);
+        assert_eq!(create_result.is_ok(), true);
+        let move_result = playfield.move_active(Dir::Down);
+        assert_eq!(move_result, false);
+        let place_result = playfield.place_active();
+        assert_eq!(place_result.is_ok(), true);
     }
 
     #[test]
