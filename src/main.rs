@@ -37,6 +37,7 @@ fn main() {
                 Key::Left => {let _ = keyboard_tx.send(engine::Event::KeyLeft);},
                 Key::Right => {let _ = keyboard_tx.send(engine::Event::KeyRight);},
                 Key::Down => {let _ = keyboard_tx.send(engine::Event::KeyDown);},
+                Key::Char(' ') => {let _ = keyboard_tx.send(engine::Event::KeyTurn);},
                 Key::Char('q') | Key::Ctrl('z') | Key::Ctrl('c') => {let _ = keyboard_tx.send(engine::Event::KeyExit);},
                 _ => { /* do nothing */ }
             }

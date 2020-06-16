@@ -43,7 +43,7 @@ pub mod engine {
                 Event::KeyRight => "➡️",
                 Event::KeyDown => "⬇️",
                 Event::KeyExit => "🚪",
-                _ => "❓",
+                Event::KeyTurn => "🔁",
             };
 
             write!(f, "{}", result)
@@ -93,6 +93,8 @@ pub mod engine {
                     game.playfield.move_active(playfield::Dir::Left);
                 } else if event == Event::KeyRight {
                     game.playfield.move_active(playfield::Dir::Right);
+                } else if event == Event::KeyTurn {
+                    game.playfield.turn_active();
                 }
             },
             State::Touched => {

@@ -157,6 +157,20 @@ impl Playfield {
         false
     }
 
+
+    pub fn turn_active(self: &mut Self) -> bool {
+        let mut tetro = figures::Tetromino{shape: self.active_tetro.shape, layout: self.storage.active_layout};
+        figures::rotate(&mut tetro);
+        let coords = self.active_tetro.coords;
+
+        if self.can_place(&tetro, &coords) {
+            self.storage.active_layout = tetro.layout;
+            return true;
+        }
+
+        false
+    }
+
     fn inside_active_tetro(self: &Self, coords: &Coords) -> (bool, Coords) {
         /* horizontal match */
         if coords.col >= self.active_tetro.coords.col
