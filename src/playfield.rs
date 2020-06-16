@@ -129,10 +129,15 @@ impl Playfield {
     }
 
     pub fn place_active(self: &mut Self) -> Result<(), OutOfBoundsError> {
-        self.place(
+        let result = self.place(
             &figures::Tetromino{shape: self.active_tetro.shape, layout: self.storage.active_layout},
             self.active_tetro.coords
-        )
+        );
+
+        /* active is no longer active */
+        self.active_tetro = Default::default();
+
+        result
     }
 
     pub fn move_active(self: &mut Self, dir: Dir) -> bool {
