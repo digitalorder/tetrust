@@ -41,7 +41,7 @@ impl View for ConsoleView {
     }
 
     fn show_playfield(&self, playfield: &Playfield) {
-        println!("{}┌────────────────────┐\r", termion::color::Bg(termion::color::Black));
+        println!("{}{}┌────────────────────┐\r", termion::cursor::Hide, termion::color::Bg(termion::color::Black));
         for i in (0..HEIGHT).rev() {
             print!("{}│", termion::color::Bg(termion::color::Black));
             for col in 0..WIDTH {
