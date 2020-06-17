@@ -27,11 +27,12 @@ fn main() {
         }
     });
 
-    let stdin = stdin();
     let mut stdout = stdout().into_raw_mode().unwrap();
-    write!(stdout, "{}{}", termion::cursor::Goto(1, 1), termion::clear::All).unwrap();
+    write!(stdout, "{}", termion::cursor::Hide).unwrap();
 
     thread::spawn(move || {
+        let stdin = stdin();
+
         for c in stdin.keys() {
             match c.unwrap() {
                 Key::Left => {let _ = keyboard_tx.send(engine::Event::KeyLeft);},
@@ -46,7 +47,6 @@ fn main() {
 
     while engine::get_state(&game) != engine::State::End {
         let event = rx.recv().unwrap();
-        write!(stdout, "{}{}", termion::cursor::Goto(1, 1), termion::clear::All).unwrap();
         engine::calculate_frame(&mut game, event);
         engine::draw_frame(&game);
 
@@ -54,4 +54,6 @@ fn main() {
             break;
         }
     }
+
+    write!(stdout, "{}", termion::cursor::Show).unwrap();
 }
