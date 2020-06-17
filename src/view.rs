@@ -12,6 +12,7 @@ pub struct ConsoleView {
 pub trait View {
     fn show_row(&self, playfield: &Playfield, row: i8) -> Row;
     fn show_playfield(&self, playfield: &Playfield);
+    fn show_static(&self);
     /* TODO: add rows iterator */
 }
 
@@ -64,6 +65,10 @@ impl View for ConsoleView {
             print!("{}│\n\r", termion::color::Bg(termion::color::Black));
         }
         println!("└────────────────────┘\r");
+    }
+
+    fn show_static(self: &Self) {
+        print!("TETRUST v{}. Move: ⬅️ ⬇️ ➡️ . Rotate: Spacebar. Exit: q or ctrl+c or ctrl+z\n\r", env!("CARGO_PKG_VERSION"));
     }
 }
 

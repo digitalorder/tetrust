@@ -69,6 +69,7 @@ pub mod engine {
     }
 
     pub fn draw_frame(game: &Game) {
+        game.view.show_static();
         game.view.show_playfield(&game.playfield);
     }
 
