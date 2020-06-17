@@ -10,6 +10,21 @@ use termion::input::TermRead;
 use termion::raw::IntoRawMode;
 
 fn main() {
+    match termion::terminal_size() {
+        Ok(v) => {
+            let (width, height) = v;
+
+            if width < 80 || height < 25 {
+                println!("Terminal size should be greater than (W:80, H:25). Given (W:{}, H:{})", width, height);
+                return;
+            }
+        }
+        Err(e) => {
+            println!("Cannot read terminal dimensions: {:?}", e);
+            return
+        },
+    }
+
     let playfield = playfield::Playfield::new(Default::default());
     let view = view::ConsoleView{};
     let mut game = engine::new_game(playfield, &view);
