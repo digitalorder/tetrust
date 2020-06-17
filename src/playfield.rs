@@ -172,16 +172,24 @@ impl Playfield {
     }
 
     fn inside_active_tetro(self: &Self, coords: &Coords) -> (bool, Coords) {
-        /* horizontal match */
-        if coords.col >= self.active_tetro.coords.col
-                && coords.col < self.active_tetro.coords.col + figures::LAYOUT_WIDTH
-                && coords.row <= self.active_tetro.coords.row
-                && coords.row > self.active_tetro.coords.row - figures::LAYOUT_HEIGHT {
-            (true, Coords{row: self.active_tetro.coords.row - coords.row,
-                col: coords.col - self.active_tetro.coords.col})
-        } else {
-            (false, Coords{row: 0, col: 0})
+        let not_found = (false, Coords{row: 0, col: 0});
+        if self.active_tetro.shape == figures::Shape::NoShape {
+            /* no active shape */
+            return not_found;
         }
+        if coords.col < self.active_tetro.coords.col ||
+                coords.col >= self.active_tetro.coords.col + figures::LAYOUT_WIDTH {
+            /* no horizontal match */
+            return not_found;
+        }
+        if coords.row > self.active_tetro.coords.row ||
+                coords.row <= self.active_tetro.coords.row - figures::LAYOUT_HEIGHT {
+            /* no vertical match */
+            return not_found;
+        }
+
+        (true, Coords{row: self.active_tetro.coords.row - coords.row,
+                      col: coords.col - self.active_tetro.coords.col})
     }
 
     pub fn new(storage: Storage) -> Playfield {
@@ -276,7 +284,7 @@ mod tests {
     }
 
     #[test]
-    fn down_in_bottom_left_corner() {
+    fn o_in_bottom_left_corner() {
         let mut playfield: Playfield = Playfield::new(Default::default());
         let create_coords = Coords{col: -1, row: 2};
         let create_result = playfield.new_active(figures::Shape::OShape, &create_coords);
@@ -285,6 +293,31 @@ mod tests {
         assert_eq!(move_result, false);
         let place_result = playfield.place_active();
         assert_eq!(place_result.is_ok(), true);
+    }
+
+
+    #[test]
+    fn lshape_in_bottom_left_corner() {
+        /* prepare a figure like this:
+         * |  L       |
+         * |LLL       |
+         * +----------+
+         */
+        let mut playfield: Playfield = Playfield::new(Default::default());
+        let create_result = playfield.new_active(figures::Shape::LShape, &Coords{col: 0, row: 2});
+        assert_eq!(create_result.is_ok(), true);
+        assert_eq!(playfield.turn_active(), true);
+        assert_eq!(playfield.turn_active(), true);
+        playfield.move_active(Dir::Down);
+        playfield.move_active(Dir::Down);
+        /* and place this figure */
+        let place_result = playfield.place_active();
+        assert_eq!(place_result.is_ok(), true);
+
+        /* verify that the bottom row is shown properly */
+        assert_eq!(playfield.shape_at(&Coords{col: 0, row: 0}), (figures::Shape::LShape, false));
+        assert_eq!(playfield.shape_at(&Coords{col: 1, row: 0}), (figures::Shape::LShape, false));
+        assert_eq!(playfield.shape_at(&Coords{col: 2, row: 0}), (figures::Shape::LShape, false));
     }
 
     #[test]
