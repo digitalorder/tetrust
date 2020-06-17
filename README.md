@@ -14,14 +14,19 @@ $ cd tetrust
 Run
 ---
 
-Draws first frame.
+This is a minimum playable game:
 
 ```
+$ cargo build --release
 $ cargo run
+or
+$ target/release/tetrust
 ```
 
 Tests
 -----
+
+All tests are expected to be green:
 
 ```
 $ cargo test
