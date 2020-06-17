@@ -157,7 +157,6 @@ impl Playfield {
         false
     }
 
-
     pub fn turn_active(self: &mut Self) -> bool {
         let mut tetro = figures::Tetromino{shape: self.active_tetro.shape, layout: self.storage.active_layout};
         figures::rotate(&mut tetro);
@@ -169,6 +168,18 @@ impl Playfield {
         }
 
         false
+    }
+
+    pub fn delete_row(self: &mut Self, row: i8) {
+        if row < 0 || row > TOTAL_HEIGHT {
+            return;
+        }
+
+        for r in row..TOTAL_HEIGHT-1 {
+            for c in 0..(WIDTH as usize) {
+                self.storage.playfield[r as usize][c] = self.storage.playfield[(r + 1) as usize][c];
+            }
+        }
     }
 
     fn inside_active_tetro(self: &Self, coords: &Coords) -> (bool, Coords) {

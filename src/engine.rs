@@ -72,6 +72,45 @@ pub mod engine {
         game.view.show_playfield(&game.playfield);
     }
 
+    fn row_filled(playfield: &playfield::Playfield, row: i8) -> bool {
+        for c in 0..playfield::WIDTH {
+            let (shape, is_active) = playfield.shape_at(&playfield::Coords{col: c, row: row});
+            if !is_active && shape == figures::Shape::NoShape {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    fn remove_filled(playfield: &mut playfield::Playfield) -> bool {
+        let mut result = false;
+
+        for r in (0..playfield::HEIGHT).rev() {
+            if row_filled(&playfield, r) {
+                result = true;
+                playfield.delete_row(r);
+            }
+        }
+
+        result
+    }
+
+    fn create_new_tetro(game: &mut Game) {
+        match game.playfield.new_active(
+            figures::random_shape(),
+            &playfield::Coords{row: playfield::HEIGHT,
+                col: playfield::WIDTH / 2 - 2}
+        ) {
+            Ok(()) => {
+                game.state = State::ActiveTetro
+            },
+            Err(_) => {
+                game.state = State::End
+            }
+        };
+    }
+
     pub fn calculate_frame(game: &mut Game, event: Event) {
         match game.state {
             State::ActiveTetro => {
@@ -92,19 +131,10 @@ pub mod engine {
                 game.state = State::Dropped;
             },
             State::Dropped => {
-                if event == Event::Timeout || event == Event::KeyDown {
-                    match game.playfield.new_active(
-                        figures::random_shape(),
-                        &playfield::Coords{row: playfield::HEIGHT,
-                            col: playfield::WIDTH / 2 - 2}
-                    ) {
-                        Ok(()) => {
-                            game.state = State::ActiveTetro
-                        },
-                        Err(_) => {
-                            game.state = State::End
-                        }
-                    };
+                if event == Event::Timeout {
+                    if !remove_filled(&mut game.playfield) {
+                        create_new_tetro(game);
+                    }
                 }
             },
             State::End => {
