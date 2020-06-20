@@ -98,8 +98,10 @@ pub mod engine {
     }
 
     fn create_new_tetro(game: &mut Game) {
+        let tetro = figures::Tetromino::new_random();
+
         match game.playfield.new_active(
-            figures::random_shape(),
+            &tetro,
             &playfield::Coords{row: playfield::HEIGHT,
                 col: playfield::WIDTH / 2 - 2}
         ) {

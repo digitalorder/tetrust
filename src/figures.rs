@@ -18,7 +18,7 @@ pub mod figures {
         fn default() -> Self { Shape::NoShape }
     }
 
-    pub fn random_shape() -> Shape {
+    fn random_shape() -> Shape {
         let mut rng = thread_rng();
         match rng.gen_range(0, 7) {
             0 => Shape::OShape,
@@ -113,6 +113,17 @@ pub mod figures {
                 Shape::NoShape => [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
             };
             Tetromino {shape: shape, layout: layout}
+        }
+
+        pub fn new_random() -> Tetromino {
+            let mut tetro = Tetromino::new(random_shape());
+            let mut rng = thread_rng();
+
+            for _ in 0..rng.gen_range(0, 3) {
+                rotate(&mut tetro);
+            }
+
+            tetro
         }
     }
 }
