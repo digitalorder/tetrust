@@ -1,6 +1,11 @@
 Tetris engine on Rust
 =====================
 
+Prerequisites
+-------------
+
+This project is written on Rust. Follow [official instructions](https://www.rust-lang.org/tools/install) to install Rust environment on your PC.
+
 Deployment
 ----------
 
@@ -11,15 +16,24 @@ $ git clone https://github.com/digitalorder/tetrust.git
 $ cd tetrust
 ```
 
-Run
----
+Build & Run
+-----------
 
-This is a minimum playable game:
+Use cargo to build the source:
 
 ```
 $ cargo build --release
+```
+
+And run:
+
+```
 $ cargo run
-or
+```
+
+Alternatevily:
+
+```
 $ target/release/tetrust
 ```
 
