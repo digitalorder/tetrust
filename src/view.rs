@@ -106,11 +106,10 @@ mod tests {
             Coords{col: 0, row: 5}
         );
         assert_eq!(place_result.is_ok(), true);
-        let place_result = playfield.new_active(
+        playfield.new_active(
             &figures::Tetromino::new(figures::Shape::LShape),
             &Coords{col: 2, row: 4}
         );
-        assert_eq!(place_result.is_ok(), true);
 
         let result: [&'static str; HEIGHT as usize] = [
             "      oo  ",

@@ -99,18 +99,15 @@ pub mod engine {
 
     fn create_new_tetro(game: &mut Game) {
         let tetro = figures::Tetromino::new_random();
+        let place_coords = playfield::Coords{row: playfield::HEIGHT,
+                col: playfield::WIDTH / 2 - 2};
 
-        match game.playfield.new_active(
-            &tetro,
-            &playfield::Coords{row: playfield::HEIGHT,
-                col: playfield::WIDTH / 2 - 2}
-        ) {
-            Ok(()) => {
-                game.state = State::ActiveTetro
-            },
-            Err(_) => {
-                game.state = State::End
-            }
+        game.playfield.new_active(&tetro, &place_coords);
+
+        if game.playfield.can_place(&tetro, &place_coords) {
+            game.state = State::ActiveTetro;
+        } else {
+            game.state = State::End;
         };
     }
 

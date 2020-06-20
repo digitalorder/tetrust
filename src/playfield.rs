@@ -115,15 +115,10 @@ impl Playfield {
         }
     }
 
-    pub fn new_active(self: &mut Self, tetro: &figures::Tetromino, coords: &Coords) -> Result<(), OutOfBoundsError> {
-        if self.can_place(tetro, &coords) {
-            self.active_tetro.coords = *coords;
-            self.active_tetro.shape = tetro.shape;
-            self.storage.active_layout = tetro.layout;
-            Ok(())
-        } else {
-            Err(OutOfBoundsError{})
-        }
+    pub fn new_active(self: &mut Self, tetro: &figures::Tetromino, coords: &Coords) {
+        self.active_tetro.coords = *coords;
+        self.active_tetro.shape = tetro.shape;
+        self.storage.active_layout = tetro.layout;
     }
 
     pub fn place_active(self: &mut Self) -> Result<(), OutOfBoundsError> {
@@ -251,8 +246,7 @@ mod tests {
         let mut playfield: Playfield = Playfield::new(Default::default());
         let create_coords = Coords{col: 5, row: 10};
         let tetro = figures::Tetromino::new(figures::Shape::OShape);
-        let create_result = playfield.new_active(&tetro, &create_coords);
-        assert_eq!(create_result.is_ok(), true);
+        playfield.new_active(&tetro, &create_coords);
 
         // check for every position that shape is either OShape or None
         assert_eq!(playfield.shape_at(&Coords{..create_coords}), (figures::Shape::NoShape, false));
@@ -278,8 +272,7 @@ mod tests {
         let mut playfield: Playfield = Playfield::new(Default::default());
         let create_coords = Coords{col: -1, row: 10};
         let tetro = figures::Tetromino::new(figures::Shape::OShape);
-        let create_result = playfield.new_active(&tetro, &create_coords);
-        assert_eq!(create_result.is_ok(), true);
+        playfield.new_active(&tetro, &create_coords);
         let move_result = playfield.move_active(Dir::Left);
         assert_eq!(move_result, false);
     }
@@ -289,8 +282,7 @@ mod tests {
         let mut playfield: Playfield = Playfield::new(Default::default());
         let create_coords = Coords{col: WIDTH - 3, row: 10};
         let tetro = figures::Tetromino::new(figures::Shape::OShape);
-        let create_result = playfield.new_active(&tetro, &create_coords);
-        assert_eq!(create_result.is_ok(), true);
+        playfield.new_active(&tetro, &create_coords);
         let move_result = playfield.move_active(Dir::Right);
         assert_eq!(move_result, false);
     }
@@ -300,8 +292,7 @@ mod tests {
         let mut playfield: Playfield = Playfield::new(Default::default());
         let create_coords = Coords{col: -1, row: 2};
         let tetro = figures::Tetromino::new(figures::Shape::OShape);
-        let create_result = playfield.new_active(&tetro, &create_coords);
-        assert_eq!(create_result.is_ok(), true);
+        playfield.new_active(&tetro, &create_coords);
         let move_result = playfield.move_active(Dir::Down);
         assert_eq!(move_result, false);
         let place_result = playfield.place_active();
@@ -318,8 +309,7 @@ mod tests {
          */
         let mut playfield: Playfield = Playfield::new(Default::default());
         let tetro = figures::Tetromino::new(figures::Shape::LShape);
-        let create_result = playfield.new_active(&tetro, &Coords{col: 0, row: 2});
-        assert_eq!(create_result.is_ok(), true);
+        playfield.new_active(&tetro, &Coords{col: 0, row: 2});
         assert_eq!(playfield.turn_active(), true);
         assert_eq!(playfield.turn_active(), true);
         playfield.move_active(Dir::Down);
@@ -342,11 +332,10 @@ mod tests {
             Coords{col: -1, row: 2}
         );
         assert_eq!(place_result.is_ok(), true);
-        let create_result = playfield.new_active(
+        playfield.new_active(
             &figures::Tetromino::new(figures::Shape::OShape),
             &Coords{col: -1, row: 4}
         );
-        assert_eq!(create_result.is_ok(), true);
         let move_result = playfield.move_active(Dir::Down);
         assert_eq!(move_result, false);
         let place_result = playfield.place_active();
