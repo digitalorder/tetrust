@@ -78,10 +78,7 @@ impl View for ConsoleView {
         for row in 0..LAYOUT_HEIGHT {
             print!("{}│", termion::cursor::Goto(BASE_COL, BASE_ROW + (row as u16) + 1));
             for col in 0..LAYOUT_WIDTH {
-                let shape = match tetro.layout[row as usize][col as usize] {
-                    0 => Shape::NoShape,
-                    _ => tetro.shape,
-                };
+                let shape = tetro.shape_at(&Coords{row: row, col: col});
                 let color = convert_to_color(shape, false);
                 print!("{}  {}", termion::color::Bg(color), termion::color::Bg(termion::color::Black));
             }
