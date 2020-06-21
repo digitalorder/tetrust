@@ -35,6 +35,7 @@ pub mod figures {
     pub const LAYOUT_HEIGHT: i8 = 4;
     pub type Layout = [[u8; LAYOUT_WIDTH as usize]; LAYOUT_HEIGHT as usize];
 
+    #[derive(Copy, Clone)]
     pub struct Tetromino {
         pub shape: Shape,
         pub layout: Layout,

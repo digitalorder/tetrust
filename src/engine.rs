@@ -54,13 +54,15 @@ pub mod engine {
         playfield: playfield::Playfield,
         view: &'a dyn View,
         state: State,
+        next_tetro: figures::Tetromino,
     }
 
     pub fn new_game(playfield: playfield::Playfield, view: &impl View) -> Game {
-        Game{
+        Game {
             view: view,
             playfield: playfield,
             state: State::Dropped,
+            next_tetro: figures::Tetromino::new_random(),
         }
     }
 
@@ -70,6 +72,7 @@ pub mod engine {
 
     pub fn draw_frame(game: &Game) {
         game.view.show_static();
+        game.view.show_next(&game.next_tetro);
         game.view.show_playfield(&game.playfield);
     }
 
@@ -98,11 +101,12 @@ pub mod engine {
     }
 
     fn create_new_tetro(game: &mut Game) {
-        let tetro = figures::Tetromino::new_random();
         let place_coords = playfield::Coords{row: playfield::HEIGHT - 1,
                 col: playfield::WIDTH / 2 - 2};
+        let tetro = game.next_tetro;
 
         game.playfield.new_active(&tetro, &place_coords);
+        game.next_tetro = figures::Tetromino::new_random();
 
         if game.playfield.can_place(&tetro, &place_coords) {
             game.state = State::ActiveTetro;
