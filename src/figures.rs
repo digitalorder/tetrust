@@ -1,6 +1,7 @@
 pub mod figures {
     extern crate rand;
     use rand::prelude::*;
+    use crate::playfield::Coords;
 
     #[derive(Copy, Clone, PartialEq, Debug)]
     pub enum Shape {
@@ -125,6 +126,13 @@ pub mod figures {
             }
 
             tetro
+        }
+
+        pub fn shape_at(self: &Self, coords: &Coords) -> Shape {
+            match self.layout[coords.row as usize][coords.col as usize] {
+                0 => Shape::NoShape,
+                _ => self.shape,
+            }
         }
     }
 }
