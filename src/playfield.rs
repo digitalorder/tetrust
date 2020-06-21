@@ -57,12 +57,18 @@ pub struct Coords {
 impl Playfield {
     pub fn place(self: &mut Self, figure: &figures::Tetromino, coords: Coords) -> Result<(), OutOfBoundsError> {
         if self.can_place(figure, &coords) {
-            for row in 0..figure.layout.len() {
-                for col in 0..figure.layout.len() {
-                    if figure.layout[row][col] != 0 {
-                        // already checked that it can be placed, so just place it
-                        // rows are counted from bottom to top, so index should be reverted
-                        self.storage.playfield[(coords.row - row as i8) as usize][(coords.col + col as i8) as usize] = figure.shape;
+            for row in 0..figures::LAYOUT_WIDTH {
+                for col in 0..figures::LAYOUT_HEIGHT {
+                    /* index may go out of bounds for empty parts of figure,
+                     * so we need to check for that */
+                    if coords.row < row || coords.col + col < 0 {
+                        continue;
+                    }
+
+                    let shape = figure.shape_at(&Coords{row: row, col: col});
+
+                    if shape != figures::Shape::NoShape {
+                        self.storage.playfield[(coords.row - row) as usize][(coords.col + col) as usize] = shape;
                     }
                 }
             }
@@ -74,16 +80,16 @@ impl Playfield {
     }
 
     pub fn can_place(self: &mut Self, figure: &figures::Tetromino, coords: &Coords) -> bool {
-        for row in 0..figure.layout.len() {
-            for col in 0..figure.layout.len() {
-                if figure.layout[row][col] != 0 {
-                    if row as i8 > coords.row || coords.row >= row as i8 + TOTAL_HEIGHT {
+        for row in 0..figures::LAYOUT_WIDTH {
+            for col in 0..figures::LAYOUT_HEIGHT {
+                if figure.shape_at(&Coords{row: row, col: col}) != figures::Shape::NoShape {
+                    if row > coords.row || coords.row >= row + TOTAL_HEIGHT {
                         return false;
                     }
-                    if coords.col + (col as i8) >= WIDTH || coords.col + (col as i8) < 0 {
+                    if coords.col + col >= WIDTH || coords.col + col < 0 {
                         return false;
                     }
-                    if self.storage.playfield[(coords.row - row as i8) as usize][(coords.col + col as i8) as usize] != figures::Shape::NoShape {
+                    if self.storage.playfield[(coords.row - row) as usize][(coords.col + col) as usize] != figures::Shape::NoShape {
                         return false;
                     }
                 }
