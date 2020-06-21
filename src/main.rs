@@ -43,7 +43,7 @@ fn main() {
     });
 
     let mut stdout = stdout().into_raw_mode().unwrap();
-    write!(stdout, "{}", termion::cursor::Hide).unwrap();
+    write!(stdout, "{}{}", termion::cursor::Hide, termion::clear::All).unwrap();
 
     thread::spawn(move || {
         let stdin = stdin();

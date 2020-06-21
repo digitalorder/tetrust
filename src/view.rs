@@ -3,6 +3,8 @@ use crate::playfield::WIDTH as WIDTH;
 use crate::playfield::HEIGHT as HEIGHT;
 use crate::playfield::Coords as Coords;
 use crate::figures::figures::Shape as Shape;
+use std::io::{stdout, Write};
+use termion::raw::IntoRawMode;
 extern crate termion;
 
 pub type Row = [char; WIDTH as usize];
@@ -41,11 +43,10 @@ impl View for ConsoleView {
     }
 
     fn show_playfield(&self, playfield: &Playfield) {
-        println!("{}{}┌────────────────────┐\r", termion::cursor::Hide, termion::color::Bg(termion::color::Black));
-        for i in (0..HEIGHT).rev() {
-            print!("{}│", termion::color::Bg(termion::color::Black));
+        for row in 0..HEIGHT {
+            print!("{}", termion::cursor::Goto(2, 3 + (row as u16)));
             for col in 0..WIDTH {
-                let (shape, is_active) = playfield.shape_at(&Coords{row: i, col: col as i8});
+                let (shape, is_active) = playfield.shape_at(&Coords{row: HEIGHT - row - 1, col: col as i8});
                 let shift = match is_active {
                     true => 8,
                     false => 0,
@@ -62,14 +63,23 @@ impl View for ConsoleView {
                 };
                 print!("{}  ", termion::color::Bg(color));
             }
-            print!("{}│\n\r", termion::color::Bg(termion::color::Black));
         }
-        println!("└────────────────────┘\r");
+        print!("{}", termion::color::Bg(termion::color::Black));
+        print!("{}", termion::cursor::Goto(1, HEIGHT as u16 + 4));
+        let mut stdout = stdout().into_raw_mode().unwrap();
+        stdout.flush().unwrap();
     }
 
     fn show_static(self: &Self) {
-        print!("{}{}", termion::cursor::Goto(1, 1), termion::clear::All);
-        print!("TETRUST v{}. Move: ⬅️ ⬇️ ➡️ . Rotate: Spacebar. Exit: q or ctrl+c or ctrl+z\n\r", env!("CARGO_PKG_VERSION"));
+        let mut stdout = stdout().into_raw_mode().unwrap();
+        print!("{}TETRUST v{}. Move: ⬅️ ⬇️ ➡️ . Rotate: Spacebar. Exit: q or ctrl+c or ctrl+z\n\r",
+               termion::cursor::Goto(1, 1), env!("CARGO_PKG_VERSION"));
+        print!("┌────────────────────┐\n\r");
+        for _ in 0..HEIGHT {
+            print!("│                    │\n\r");
+        }
+        println!("└────────────────────┘\n\r");
+        stdout.flush().unwrap();
     }
 }
 
