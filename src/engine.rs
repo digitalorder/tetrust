@@ -99,7 +99,7 @@ pub mod engine {
 
     fn create_new_tetro(game: &mut Game) {
         let tetro = figures::Tetromino::new_random();
-        let place_coords = playfield::Coords{row: playfield::HEIGHT,
+        let place_coords = playfield::Coords{row: playfield::HEIGHT - 1,
                 col: playfield::WIDTH / 2 - 2};
 
         game.playfield.new_active(&tetro, &place_coords);
