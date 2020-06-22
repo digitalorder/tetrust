@@ -32,7 +32,8 @@ pub mod engine {
         KeyRight,
         KeyTurn,
         KeyDown,
-        KeyExit
+        KeyDrop,
+        KeyExit,
     }
 
     impl fmt::Display for Event {
@@ -44,6 +45,7 @@ pub mod engine {
                 Event::KeyDown => "⬇️",
                 Event::KeyExit => "🚪",
                 Event::KeyTurn => "🔁",
+                Event::KeyDrop => "⬆️",
             };
 
             write!(f, "{}", result)
@@ -129,6 +131,8 @@ pub mod engine {
                     game.playfield.move_active(playfield::Dir::Right);
                 } else if event == Event::KeyTurn {
                     game.playfield.turn_active();
+                } else if event == Event::KeyDrop {
+                    while game.playfield.move_active(playfield::Dir::Down) {};
                 }
             },
             State::Touched => {

@@ -59,7 +59,7 @@ impl View for ConsoleView {
     }
 
     fn show_static(self: &Self) {
-        print!("{}TETRUST v{}. Move: ⬅️ ⬇️ ➡️ . Rotate: Spacebar. Exit: q or ctrl+c or ctrl+z\n\r",
+        print!("{}TETRUST v{}. Move: ⬅️ ⬇️ ➡️  Rotate: ⬆️  Drop: Spacebar. Exit: q\n\r",
                termion::cursor::Goto(1, 1), env!("CARGO_PKG_VERSION"));
         print!("┌────────────────────┐\n\r");
         for _ in 0..HEIGHT {
