@@ -61,6 +61,8 @@ pub mod engine {
         lines_cleared: u32,
         level: u8,
         score: u32,
+        frame_counter: u32,
+        view_outdated: bool,
     }
 
     pub fn new_game(playfield: playfield::Playfield, view: &impl View) -> Game {
@@ -72,6 +74,8 @@ pub mod engine {
             lines_cleared: 0,
             level: 0,
             score: 0,
+            frame_counter: 0,
+            view_outdated: true,
         }
     }
 
@@ -79,10 +83,13 @@ pub mod engine {
         game.state
     }
 
-    pub fn draw_frame(game: &Game) {
-        game.view.show_static(game.level, game.score, game.lines_cleared);
-        game.view.show_next(&game.next_tetro);
-        game.view.show_playfield(&game.playfield);
+    pub fn draw_frame(game: &mut Game) {
+        if game.view_outdated {
+            game.view.show_static(game.level, game.score, game.lines_cleared);
+            game.view.show_next(&game.next_tetro);
+            game.view_outdated = false;
+            game.view.show_playfield(&game.playfield);
+        }
     }
 
     fn row_filled(playfield: &playfield::Playfield, row: i8) -> bool {
@@ -142,22 +149,42 @@ pub mod engine {
         line_coeff * (level as u32 + 1)
     }
 
+    fn move_active(game: &mut Game, dir: playfield::Dir) -> bool {
+        game.view_outdated = true;
+        game.playfield.move_active(dir)
+    }
+
+    fn turn_active(game: &mut Game) -> bool {
+        game.view_outdated = true;
+        game.playfield.turn_active()
+    }
+
     pub fn calculate_frame(game: &mut Game, event: Event) {
         match game.state {
             State::ActiveTetro => {
-                if event == Event::Timeout || event == Event::KeyDown {
-                    if !game.playfield.move_active(playfield::Dir::Down) {
+                if event == Event::Timeout {
+                    game.frame_counter += 1;
+                    if game.frame_counter == 48 {
+                        game.frame_counter = 0;
+                        if !move_active(game, playfield::Dir::Down) {
+                            let _ = game.playfield.place_active();
+                            game.state = State::Dropped;
+                        }
+                    }
+                } else if event == Event::KeyDown {
+                    if !move_active(game, playfield::Dir::Down) {
                         let _ = game.playfield.place_active();
                         game.state = State::Dropped;
                     }
                 } else if event == Event::KeyLeft {
-                    game.playfield.move_active(playfield::Dir::Left);
+                    move_active(game, playfield::Dir::Left);
                 } else if event == Event::KeyRight {
-                    game.playfield.move_active(playfield::Dir::Right);
+                    move_active(game, playfield::Dir::Right);
                 } else if event == Event::KeyTurn {
-                    game.playfield.turn_active();
+                    turn_active(game);
                 } else if event == Event::KeyDrop {
-                    while game.playfield.move_active(playfield::Dir::Down) {};
+                    while move_active(game, playfield::Dir::Down) {};
+                    game.frame_counter = 24;
                 }
             },
             State::Touched => {

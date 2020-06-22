@@ -34,11 +34,11 @@ fn main() {
 
     thread::spawn(move || {
         /* timeout generator */
-        let interval = 2000;
+        const FRAME_INTERVAL: u64 = 1000000 / 60;
 
         loop {
             let _ = timer_tx.send(engine::Event::Timeout);
-            thread::sleep(Duration::from_millis(interval));
+            thread::sleep(Duration::from_micros(FRAME_INTERVAL));
         }
     });
 
@@ -64,7 +64,7 @@ fn main() {
     while engine::get_state(&game) != engine::State::End {
         let event = rx.recv().unwrap();
         engine::calculate_frame(&mut game, event);
-        engine::draw_frame(&game);
+        engine::draw_frame(&mut game);
 
         if event == engine::Event::KeyExit {
             break;
