@@ -14,7 +14,7 @@ pub struct ConsoleView {
 pub trait View {
     fn show_row(&self, playfield: &Playfield, row: i8) -> Row;
     fn show_playfield(&self, playfield: &Playfield);
-    fn show_static(&self);
+    fn show_static(&self, level: u8, score: u32, lines: u32);
     fn show_next(self: &Self, tetro: &Tetromino);
     /* TODO: add rows iterator */
 }
@@ -58,7 +58,7 @@ impl View for ConsoleView {
         stdout.flush().unwrap();
     }
 
-    fn show_static(self: &Self) {
+    fn show_static(self: &Self, level: u8, score: u32, lines: u32) {
         print!("{}TETRUST v{}. Move: ⬅️ ⬇️ ➡️  Rotate: ⬆️  Drop: Spacebar. Exit: q\n\r",
                termion::cursor::Goto(1, 1), env!("CARGO_PKG_VERSION"));
         print!("┌────────────────────┐\n\r");
@@ -66,6 +66,7 @@ impl View for ConsoleView {
             print!("│                    │\n\r");
         }
         print!("└────────────────────┘\n\r");
+        print!("{}Level: {} Score: {} Lines: {}", termion::cursor::Goto(26, 2), level, score, lines);
         let mut stdout = stdout().into_raw_mode().unwrap();
         stdout.flush().unwrap();
     }

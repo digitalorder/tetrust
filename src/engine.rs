@@ -80,7 +80,7 @@ pub mod engine {
     }
 
     pub fn draw_frame(game: &Game) {
-        game.view.show_static();
+        game.view.show_static(game.level, game.score, game.lines_cleared);
         game.view.show_next(&game.next_tetro);
         game.view.show_playfield(&game.playfield);
     }
