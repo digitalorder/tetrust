@@ -3,6 +3,7 @@ pub mod engine {
     use crate::playfield as playfield;
     use crate::figures::figures as figures;
     use std::fmt;
+    use std::cmp;
 
     #[derive(Copy, Clone, PartialEq)]
     pub enum State {
@@ -57,6 +58,9 @@ pub mod engine {
         view: &'a dyn View,
         state: State,
         next_tetro: figures::Tetromino,
+        lines_cleared: u32,
+        level: u8,
+        score: u32,
     }
 
     pub fn new_game(playfield: playfield::Playfield, view: &impl View) -> Game {
@@ -65,6 +69,9 @@ pub mod engine {
             playfield: playfield,
             state: State::Dropped,
             next_tetro: figures::Tetromino::new_random(),
+            lines_cleared: 0,
+            level: 0,
+            score: 0,
         }
     }
 
@@ -89,12 +96,12 @@ pub mod engine {
         return true;
     }
 
-    fn remove_filled(playfield: &mut playfield::Playfield) -> bool {
-        let mut result = false;
+    fn remove_filled(playfield: &mut playfield::Playfield) -> u8 {
+        let mut result = 0;
 
         for r in (0..playfield::HEIGHT).rev() {
             if row_filled(&playfield, r) {
-                result = true;
+                result += 1;
                 playfield.delete_row(r);
             }
         }
@@ -115,6 +122,24 @@ pub mod engine {
         } else {
             game.state = State::End;
         };
+    }
+
+    fn score_increment(level: u8, cleared_lines: u8) -> u32 {
+        /* Level 1 line         2 lines         3 lines         4 lines
+         * 0     40             100             300             1200
+         * 1     80             200             600             2400
+         * 2     120            300             900             3600
+         * .......
+         * n     40 * (n + 1)   100 * (n + 1)   300 * (n + 1)   1200 * (n + 1)
+         */
+        let line_coeff: u32 = match cleared_lines {
+            1 => 40,
+            2 => 100,
+            3 => 300,
+            _ => 1200,
+        };
+
+        line_coeff * (level as u32 + 1)
     }
 
     pub fn calculate_frame(game: &mut Game, event: Event) {
@@ -140,7 +165,13 @@ pub mod engine {
             },
             State::Dropped => {
                 if event == Event::Timeout {
-                    if !remove_filled(&mut game.playfield) {
+                    let removed = remove_filled(&mut game.playfield);
+                    game.lines_cleared += removed as u32;
+                    game.level = cmp::max(game.level, (game.lines_cleared / 10) as u8);
+
+                    if removed > 0 {
+                        game.score += score_increment(game.level, removed);
+                    } else {
                         create_new_tetro(game);
                     }
                 }
