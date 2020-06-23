@@ -1,7 +1,4 @@
-use crate::playfield::Playfield;
-use crate::playfield::WIDTH as WIDTH;
-use crate::playfield::HEIGHT as HEIGHT;
-use crate::playfield::Coords as Coords;
+use crate::playfield::{Playfield, ActiveTetromino, WIDTH, HEIGHT, Coords};
 use crate::figures::figures::{Shape, Tetromino, LAYOUT_HEIGHT, LAYOUT_WIDTH};
 use std::io::{stdout, Write};
 use termion::raw::IntoRawMode;
@@ -12,18 +9,18 @@ pub struct ConsoleView {
 }
 
 pub trait View {
-    fn show_row(&self, playfield: &Playfield, row: i8) -> Row;
-    fn show_playfield(&self, playfield: &Playfield);
+    fn show_row(&self, playfield: &Playfield, row: i8, active_tetro: &ActiveTetromino) -> Row;
+    fn show_playfield(&self, playfield: &Playfield, active_tetro: &ActiveTetromino);
     fn show_static(&self, level: u8, score: u32, lines: u32);
     fn show_next(self: &Self, tetro: &Tetromino);
     /* TODO: add rows iterator */
 }
 
 impl View for ConsoleView {
-    fn show_row(&self, playfield: &Playfield, row: i8) -> Row {
+    fn show_row(&self, playfield: &Playfield, row: i8, active_tetro: &ActiveTetromino) -> Row {
         let mut result: Row = [' '; WIDTH as usize];
         for i in 0..WIDTH as usize {
-            let (shape, is_active) = playfield.shape_at(&Coords{row: row, col: i as i8});
+            let (shape, is_active) = playfield.shape_at(&Coords{row: row, col: i as i8}, active_tetro);
             let mut value: char = match shape {
                 Shape::NoShape => ' ',
                 Shape::OShape => 'o',
@@ -43,11 +40,11 @@ impl View for ConsoleView {
         result
     }
 
-    fn show_playfield(&self, playfield: &Playfield) {
+    fn show_playfield(&self, playfield: &Playfield, active_tetro: &ActiveTetromino) {
         for row in 0..HEIGHT {
             print!("{}", termion::cursor::Goto(2, 3 + (row as u16)));
             for col in 0..WIDTH {
-                let (shape, is_active) = playfield.shape_at(&Coords{row: HEIGHT - row - 1, col: col as i8});
+                let (shape, is_active) = playfield.shape_at(&Coords{row: HEIGHT - row - 1, col: col as i8}, active_tetro);
                 let color = convert_to_color(shape, is_active);
                 print!("{}  {}", termion::color::Bg(color), termion::color::Bg(termion::color::Black));
             }
@@ -121,9 +118,10 @@ mod tests {
     fn show_empty_view() {
         let playfield: Playfield = Playfield::new(Storage::default());
         let view: ConsoleView = ConsoleView{};
+        let active_tetro = ActiveTetromino::default();
 
         for i in 0..HEIGHT {
-            let row: String = view.show_row(&playfield, i).iter().collect();
+            let row: String = view.show_row(&playfield, i, &active_tetro).iter().collect();
             assert_eq!(row, "          ");
         }
     }
@@ -142,10 +140,10 @@ mod tests {
             Coords{col: 0, row: 5}
         );
         assert_eq!(place_result.is_ok(), true);
-        playfield.new_active(
-            &figures::Tetromino::new(figures::Shape::LShape),
-            &Coords{col: 2, row: 4}
-        );
+        let active_tetro = ActiveTetromino{
+            tetro: figures::Tetromino::new(figures::Shape::LShape),
+            coords: Coords{col: 2, row: 4},
+        };
 
         let result: [&'static str; HEIGHT as usize] = [
             "      oo  ",
@@ -170,7 +168,7 @@ mod tests {
             "          "];
 
         for i in 0..HEIGHT {
-            let row: String = view.show_row(&playfield, i).iter().collect();
+            let row: String = view.show_row(&playfield, i, &active_tetro).iter().collect();
             assert_eq!(row, result[i as usize], "Line number {}", i);
         }
     }

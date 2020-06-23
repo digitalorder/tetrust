@@ -57,6 +57,7 @@ pub mod engine {
         playfield: playfield::Playfield,
         view: &'a dyn View,
         state: State,
+        active_tetro: playfield::ActiveTetromino,
         next_tetro: figures::Tetromino,
         lines_cleared: u32,
         level: u8,
@@ -70,6 +71,7 @@ pub mod engine {
             view: view,
             playfield: playfield,
             state: State::Dropped,
+            active_tetro: playfield::ActiveTetromino::default(),
             next_tetro: figures::Tetromino::new_random(),
             lines_cleared: 0,
             level: 0,
@@ -88,14 +90,14 @@ pub mod engine {
             game.view.show_static(game.level, game.score, game.lines_cleared);
             game.view.show_next(&game.next_tetro);
             game.view_outdated = false;
-            game.view.show_playfield(&game.playfield);
+            game.view.show_playfield(&game.playfield, &game.active_tetro);
         }
     }
 
     fn row_filled(playfield: &playfield::Playfield, row: i8) -> bool {
         for c in 0..playfield::WIDTH {
-            let (shape, is_active) = playfield.shape_at(&playfield::Coords{col: c, row: row});
-            if !is_active && shape == figures::Shape::NoShape {
+            let (shape, _) = playfield.shape_at(&playfield::Coords{col: c, row: row}, &playfield::ActiveTetromino::default());
+            if shape == figures::Shape::NoShape {
                 return false;
             }
         }
@@ -117,15 +119,15 @@ pub mod engine {
     }
 
     fn create_new_tetro(game: &mut Game) -> State {
-        let place_coords = playfield::Coords{row: playfield::HEIGHT - 1,
-                col: playfield::WIDTH / 2 - 2};
-        let tetro = game.next_tetro;
-
         game.view_outdated = true;
-        game.playfield.new_active(&tetro, &place_coords);
+        game.active_tetro = playfield::ActiveTetromino{
+            coords: playfield::Coords{row: playfield::HEIGHT - 1,
+                col: playfield::WIDTH / 2 - 2},
+            tetro: game.next_tetro
+        };
         game.next_tetro = figures::Tetromino::new_random();
 
-        if game.playfield.can_place(&tetro, &place_coords) {
+        if game.playfield.can_place(&game.active_tetro.tetro, &game.active_tetro.coords) {
             State::ActiveTetro
         } else {
             State::End
@@ -152,16 +154,16 @@ pub mod engine {
 
     fn move_active(game: &mut Game, dir: playfield::Dir) -> bool {
         game.view_outdated = true;
-        game.playfield.move_active(dir)
+        game.playfield.move_tetro(&mut game.active_tetro, dir)
     }
 
     fn turn_active(game: &mut Game) -> bool {
         game.view_outdated = true;
-        game.playfield.turn_active()
+        game.playfield.turn_tetro(&mut game.active_tetro)
     }
 
     fn inc_frame_counter(game: &mut Game) -> bool {
-        
+
         let max_frame_count = match game.level {
             0..=8 => 48 - 5 * game.level,
             9 => 6,
@@ -173,7 +175,7 @@ pub mod engine {
         };
 
         game.frame_counter += 1;
-        if game.frame_counter == max_frame_count {
+        if game.frame_counter >= max_frame_count {
             game.frame_counter = 0;
             true
         } else {
@@ -183,7 +185,8 @@ pub mod engine {
 
     fn move_down(game: &mut Game) -> State {
         if !move_active(game, playfield::Dir::Down) {
-            let _ = game.playfield.place_active();
+            let _ = game.playfield.place(&game.active_tetro.tetro, game.active_tetro.coords);
+            game.active_tetro.tetro.shape = figures::Shape::NoShape;
             State::Dropped
         } else {
             State::ActiveTetro
