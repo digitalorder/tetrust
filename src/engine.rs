@@ -61,7 +61,7 @@ pub mod engine {
         lines_cleared: u32,
         level: u8,
         score: u32,
-        frame_counter: u32,
+        frame_counter: u8,
         view_outdated: bool,
     }
 
@@ -159,23 +159,45 @@ pub mod engine {
         game.playfield.turn_active()
     }
 
+    fn inc_frame_counter(game: &mut Game) -> bool {
+        
+        let max_frame_count = match game.level {
+            0..=8 => 48 - 5 * game.level,
+            9 => 6,
+            10..=12 => 5,
+            13..=15 => 4,
+            16..=18 => 3,
+            19..=28 => 2,
+            _ => 1
+        };
+
+        game.frame_counter += 1;
+        if game.frame_counter == max_frame_count {
+            game.frame_counter = 0;
+            true
+        } else {
+            false
+        }
+    }
+
+    fn move_down(game: &mut Game) -> State {
+        if !move_active(game, playfield::Dir::Down) {
+            let _ = game.playfield.place_active();
+            State::Dropped
+        } else {
+            State::ActiveTetro
+        }
+    }
+
     pub fn calculate_frame(game: &mut Game, event: Event) {
         match game.state {
             State::ActiveTetro => {
                 if event == Event::Timeout {
-                    game.frame_counter += 1;
-                    if game.frame_counter == 48 {
-                        game.frame_counter = 0;
-                        if !move_active(game, playfield::Dir::Down) {
-                            let _ = game.playfield.place_active();
-                            game.state = State::Dropped;
-                        }
+                    if inc_frame_counter(game) {
+                        game.state = move_down(game);
                     }
                 } else if event == Event::KeyDown {
-                    if !move_active(game, playfield::Dir::Down) {
-                        let _ = game.playfield.place_active();
-                        game.state = State::Dropped;
-                    }
+                    game.state = move_down(game);
                 } else if event == Event::KeyLeft {
                     move_active(game, playfield::Dir::Left);
                 } else if event == Event::KeyRight {
