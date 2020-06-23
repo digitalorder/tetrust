@@ -121,6 +121,7 @@ pub mod engine {
                 col: playfield::WIDTH / 2 - 2};
         let tetro = game.next_tetro;
 
+        game.view_outdated = true;
         game.playfield.new_active(&tetro, &place_coords);
         game.next_tetro = figures::Tetromino::new_random();
 
