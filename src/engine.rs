@@ -116,7 +116,7 @@ pub mod engine {
         result
     }
 
-    fn create_new_tetro(game: &mut Game) {
+    fn create_new_tetro(game: &mut Game) -> State {
         let place_coords = playfield::Coords{row: playfield::HEIGHT - 1,
                 col: playfield::WIDTH / 2 - 2};
         let tetro = game.next_tetro;
@@ -126,10 +126,10 @@ pub mod engine {
         game.next_tetro = figures::Tetromino::new_random();
 
         if game.playfield.can_place(&tetro, &place_coords) {
-            game.state = State::ActiveTetro;
+            State::ActiveTetro
         } else {
-            game.state = State::End;
-        };
+            State::End
+        }
     }
 
     fn score_increment(level: u8, cleared_lines: u8) -> u32 {
@@ -222,7 +222,7 @@ pub mod engine {
                     if removed > 0 {
                         game.score += score_increment(game.level, removed);
                     } else {
-                        create_new_tetro(game);
+                        game.state = create_new_tetro(game);
                     }
                 }
             },
