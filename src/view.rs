@@ -86,68 +86,68 @@ fn convert_to_color(shape: Shape, is_active: bool) -> termion::color::AnsiValue 
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::playfield::Storage as Storage;
-    use crate::figures::figures;
-    use crate::playfield::Coords;
-    use crate::playfield::HEIGHT as HEIGHT;
+    // use super::*;
+    // use crate::playfield::Storage as Storage;
+    // use crate::figures::figures;
+    // use crate::playfield::Coords;
+    // use crate::playfield::HEIGHT as HEIGHT;
 
-    #[test]
-    fn show_empty_view() {
-        let playfield: Playfield = Playfield::new(Storage::default());
-        let view: ConsoleView = ConsoleView{};
-        let active_tetro = FieldTetromino::default();
+    // #[test]
+    // fn show_empty_view() {
+    //     let playfield: Playfield = Playfield::new(Storage::default());
+    //     let view: ConsoleView = ConsoleView{};
+    //     let active_tetro = FieldTetromino::default();
 
-        for i in 0..HEIGHT {
-            let row: String = view.show_row(&playfield, i, &active_tetro).iter().collect();
-            assert_eq!(row, "          ");
-        }
-    }
+    //     for i in 0..HEIGHT {
+    //         let row: String = view.show_row(&playfield, i, &active_tetro).iter().collect();
+    //         assert_eq!(row, "          ");
+    //     }
+    // }
 
-    #[test]
-    fn show_one_tetramino() {
-        let mut playfield: Playfield = Playfield::new(Storage::default());
-        let view: ConsoleView = ConsoleView{};
-        let place_result = playfield.place(
-            &figures::Tetromino::new(figures::Shape::OShape),
-            Coords{col: 5, row: 2}
-        );
-        assert_eq!(place_result.is_ok(), true);
-        let place_result = playfield.place(
-            &figures::Tetromino::new(figures::Shape::TShape),
-            Coords{col: 0, row: 5}
-        );
-        assert_eq!(place_result.is_ok(), true);
-        let active_tetro = FieldTetromino{
-            tetro: figures::Tetromino::new(figures::Shape::LShape),
-            coords: Coords{col: 2, row: 4},
-        };
+    // #[test]
+    // fn show_one_tetramino() {
+    //     let mut playfield: Playfield = Playfield::new(Storage::default());
+    //     let view: ConsoleView = ConsoleView{};
+    //     let place_result = playfield.place(
+    //         &figures::Tetromino::new(figures::Shape::OShape),
+    //         Coords{col: 5, row: 2}
+    //     );
+    //     assert_eq!(place_result.is_ok(), true);
+    //     let place_result = playfield.place(
+    //         &figures::Tetromino::new(figures::Shape::TShape),
+    //         Coords{col: 0, row: 5}
+    //     );
+    //     assert_eq!(place_result.is_ok(), true);
+    //     let active_tetro = FieldTetromino{
+    //         tetro: figures::Tetromino::new(figures::Shape::LShape),
+    //         coords: Coords{col: 2, row: 4},
+    //     };
 
-        let result: [&'static str; HEIGHT as usize] = [
-            "      oo  ",
-            "      oo  ",
-            "  L       ",
-            " tLLL     ",
-            "ttt       ",
-            "          ",
-            "          ",
-            "          ",
-            "          ",
-            "          ",
-            "          ",
-            "          ",
-            "          ",
-            "          ",
-            "          ",
-            "          ",
-            "          ",
-            "          ",
-            "          ",
-            "          "];
+    //     let result: [&'static str; HEIGHT as usize] = [
+    //         "      oo  ",
+    //         "      oo  ",
+    //         "  L       ",
+    //         " tLLL     ",
+    //         "ttt       ",
+    //         "          ",
+    //         "          ",
+    //         "          ",
+    //         "          ",
+    //         "          ",
+    //         "          ",
+    //         "          ",
+    //         "          ",
+    //         "          ",
+    //         "          ",
+    //         "          ",
+    //         "          ",
+    //         "          ",
+    //         "          ",
+    //         "          "];
 
-        for i in 0..HEIGHT {
-            let row: String = view.show_row(&playfield, i, &active_tetro).iter().collect();
-            assert_eq!(row, result[i as usize], "Line number {}", i);
-        }
-    }
+    //     for i in 0..HEIGHT {
+    //         let row: String = view.show_row(&playfield, i, &active_tetro).iter().collect();
+    //         assert_eq!(row, result[i as usize], "Line number {}", i);
+    //     }
+    // }
 }
