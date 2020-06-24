@@ -41,7 +41,7 @@ pub enum Dir {
 }
 
 pub struct Playfield {
-    pub storage: Storage,
+    storage: Storage,
 }
 
 pub struct OutOfBoundsError;
