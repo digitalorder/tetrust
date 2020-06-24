@@ -94,22 +94,11 @@ pub mod engine {
         }
     }
 
-    fn row_filled(playfield: &playfield::Playfield, row: i8) -> bool {
-        for c in 0..playfield::WIDTH {
-            let (shape, _) = playfield.shape_at(&playfield::Coords{col: c, row: row}, &playfield::FieldTetromino::default());
-            if shape == figures::Shape::NoShape {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
     fn remove_filled(playfield: &mut playfield::Playfield) -> u8 {
         let mut result = 0;
 
         for r in (0..playfield::HEIGHT).rev() {
-            if row_filled(&playfield, r) {
+            if playfield.row_filled(r) {
                 result += 1;
                 playfield.delete_row(r);
             }

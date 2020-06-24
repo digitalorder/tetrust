@@ -97,6 +97,16 @@ impl Playfield {
         true
     }
 
+    pub fn row_filled(self: &Self, row: i8) -> bool {
+        for col in 0..WIDTH {
+            if self.storage.playfield[row as usize][col as usize] == figures::Shape::NoShape {
+                return false;
+            }
+        }
+
+        true
+    }
+
     /**
      * \brief Get shape stored at given coordinates.
      *
