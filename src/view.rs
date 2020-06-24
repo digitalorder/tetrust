@@ -9,36 +9,14 @@ pub struct ConsoleView {
 }
 
 pub trait View {
-    fn show_row(&self, playfield: &Playfield, row: i8, active_tetro: &FieldTetromino) -> Row;
-    fn show_playfield(&self, playfield: &Playfield, active_tetro: &FieldTetromino);
+
     fn show_static(&self, level: u8, score: u32, lines: u32);
     fn show_next(self: &Self, tetro: &Tetromino);
     /* TODO: add rows iterator */
 }
 
 impl View for ConsoleView {
-    fn show_row(&self, playfield: &Playfield, row: i8, active_tetro: &FieldTetromino) -> Row {
-        let mut result: Row = [' '; WIDTH as usize];
-        for i in 0..WIDTH as usize {
-            let (shape, is_active) = playfield.shape_at(&Coords{row: row, col: i as i8}, active_tetro);
-            let mut value: char = match shape {
-                Shape::NoShape => ' ',
-                Shape::OShape => 'o',
-                Shape::IShape => 'i',
-                Shape::TShape => 't',
-                Shape::JShape => 'j',
-                Shape::LShape => 'l',
-                Shape::SShape => 's',
-                Shape::ZShape => 'z',
-            };
 
-            if is_active {
-                value.make_ascii_uppercase();
-            }
-            result[i] = value;
-        }
-        result
-    }
 
     fn show_playfield(&self, playfield: &Playfield, active_tetro: &FieldTetromino) {
         for row in 0..HEIGHT {
