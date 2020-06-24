@@ -126,7 +126,7 @@ impl Playfield {
                 Playfield::inside_tetro_coords(&coords, &active_tetro.coords)
             };
 
-            if inside && (active_tetro.tetro.layout[active_coords.row as usize][active_coords.col as usize] == 1) {
+            if inside && (active_tetro.tetro.shape_at(&active_coords) != figures::Shape::NoShape) {
                 (active_tetro.tetro.shape, true)
             } else {
                 (self.storage.playfield[coords.row as usize][coords.col as usize], false)

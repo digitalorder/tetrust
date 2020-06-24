@@ -39,7 +39,7 @@ pub mod figures {
     #[derive(Copy, Clone)]
     pub struct Tetromino {
         pub shape: Shape,
-        pub layout: Layout,
+        layout: Layout,
     }
 
     fn rotate_special_i(layout: &mut Layout) {
@@ -140,12 +140,26 @@ pub mod figures {
 #[cfg(test)]
 mod tests {
     use super::figures::*;
+    use crate::playfield::Coords;
+
+    fn assert_shape(tetro: &Tetromino, binary_array: &Layout) {
+        for row in 0..LAYOUT_HEIGHT {
+            for col in 0..LAYOUT_WIDTH {
+                let coords = Coords{row: row, col: col};
+                if binary_array[row as usize][col as usize] == 1 {
+                    assert_eq!(tetro.shape_at(&coords), tetro.shape, "(row: {} col: {})", row, col);
+                } else {
+                    assert_eq!(tetro.shape_at(&coords), Shape::NoShape, "(row: {} col: {})", row, col);
+                }
+            }
+        }
+    }
 
     #[test]
     fn create_o_shape() {
         let f = Tetromino::new(Shape::OShape);
         assert_eq!(f.shape, Shape::OShape);
-        assert_eq!(f.layout, [[0, 0, 0, 0], [0, 1, 1, 0], [0, 1, 1, 0], [0, 0, 0, 0]]);
+        assert_shape(&f, &[[0, 0, 0, 0], [0, 1, 1, 0], [0, 1, 1, 0], [0, 0, 0, 0]]);
     }
 
     #[test]
@@ -154,16 +168,16 @@ mod tests {
         /* o shape remains the same, no matter how much you rotate it */
         /* 90 degrees */
         rotate(&mut f);
-        assert_eq!(f.layout, [[0, 0, 0, 0], [0, 1, 1, 0], [0, 1, 1, 0], [0, 0, 0, 0]]);
+        assert_shape(&f, &[[0, 0, 0, 0], [0, 1, 1, 0], [0, 1, 1, 0], [0, 0, 0, 0]]);
         /* 180 degrees */
         rotate(&mut f);
-        assert_eq!(f.layout, [[0, 0, 0, 0], [0, 1, 1, 0], [0, 1, 1, 0], [0, 0, 0, 0]]);
+        assert_shape(&f, &[[0, 0, 0, 0], [0, 1, 1, 0], [0, 1, 1, 0], [0, 0, 0, 0]]);
         /* 270 degrees */
         rotate(&mut f);
-        assert_eq!(f.layout, [[0, 0, 0, 0], [0, 1, 1, 0], [0, 1, 1, 0], [0, 0, 0, 0]]);
+        assert_shape(&f, &[[0, 0, 0, 0], [0, 1, 1, 0], [0, 1, 1, 0], [0, 0, 0, 0]]);
         /* 360 degrees */
         rotate(&mut f);
-        assert_eq!(f.layout, [[0, 0, 0, 0], [0, 1, 1, 0], [0, 1, 1, 0], [0, 0, 0, 0]]);
+        assert_shape(&f, &[[0, 0, 0, 0], [0, 1, 1, 0], [0, 1, 1, 0], [0, 0, 0, 0]]);
     }
 
      #[test]
@@ -172,16 +186,16 @@ mod tests {
         /* i shape switches between two states */
         /* 90 degrees */
         rotate(&mut f);
-        assert_eq!(f.layout, [[0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]]);
+        assert_shape(&f, &[[0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]]);
         /* 180 degrees */
         rotate(&mut f);
-        assert_eq!(f.layout, [[0, 0, 0, 0], [0, 0, 0, 0], [1, 1, 1, 1], [0, 0, 0, 0]]);
+        assert_shape(&f, &[[0, 0, 0, 0], [0, 0, 0, 0], [1, 1, 1, 1], [0, 0, 0, 0]]);
         /* 270 degrees */
         rotate(&mut f);
-        assert_eq!(f.layout, [[0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]]);
+        assert_shape(&f, &[[0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]]);
         /* 360 degrees */
         rotate(&mut f);
-        assert_eq!(f.layout, [[0, 0, 0, 0], [0, 0, 0, 0], [1, 1, 1, 1], [0, 0, 0, 0]]);
+        assert_shape(&f, &[[0, 0, 0, 0], [0, 0, 0, 0], [1, 1, 1, 1], [0, 0, 0, 0]]);
     }
 
     #[test]
@@ -189,16 +203,16 @@ mod tests {
         let mut f = Tetromino::new(Shape::TShape);
         /* 90 degrees */
         rotate(&mut f);
-        assert_eq!(f.layout, [[0, 1, 0, 0], [1, 1, 0, 0], [0, 1, 0, 0], [0, 0, 0, 0]]);
+        assert_shape(&f, &[[0, 1, 0, 0], [1, 1, 0, 0], [0, 1, 0, 0], [0, 0, 0, 0]]);
         /* 180 degrees */
         rotate(&mut f);
-        assert_eq!(f.layout, [[0, 1, 0, 0], [1, 1, 1, 0], [0, 0, 0, 0], [0, 0, 0, 0]]);
+        assert_shape(&f, &[[0, 1, 0, 0], [1, 1, 1, 0], [0, 0, 0, 0], [0, 0, 0, 0]]);
         /* 270 degrees */
         rotate(&mut f);
-        assert_eq!(f.layout, [[0, 1, 0, 0], [0, 1, 1, 0], [0, 1, 0, 0], [0, 0, 0, 0]]);
+        assert_shape(&f, &[[0, 1, 0, 0], [0, 1, 1, 0], [0, 1, 0, 0], [0, 0, 0, 0]]);
         /* 360 degrees */
         rotate(&mut f);
-        assert_eq!(f.layout, [[0, 0, 0, 0], [1, 1, 1, 0], [0, 1, 0, 0], [0, 0, 0, 0]]);
+        assert_shape(&f, &[[0, 0, 0, 0], [1, 1, 1, 0], [0, 1, 0, 0], [0, 0, 0, 0]]);
     }
 
     #[test]
@@ -206,16 +220,16 @@ mod tests {
         let mut f = Tetromino::new(Shape::JShape);
         /* 90 degrees */
         rotate(&mut f);
-        assert_eq!(f.layout, [[0, 1, 0, 0], [0, 1, 0, 0], [1, 1, 0, 0], [0, 0, 0, 0]]);
+        assert_shape(&f, &[[0, 1, 0, 0], [0, 1, 0, 0], [1, 1, 0, 0], [0, 0, 0, 0]]);
         /* 180 degrees */
         rotate(&mut f);
-        assert_eq!(f.layout, [[1, 0, 0, 0], [1, 1, 1, 0], [0, 0, 0, 0], [0, 0, 0, 0]]);
+        assert_shape(&f, &[[1, 0, 0, 0], [1, 1, 1, 0], [0, 0, 0, 0], [0, 0, 0, 0]]);
         /* 270 degrees */
         rotate(&mut f);
-        assert_eq!(f.layout, [[0, 1, 1, 0], [0, 1, 0, 0], [0, 1, 0, 0], [0, 0, 0, 0]]);
+        assert_shape(&f, &[[0, 1, 1, 0], [0, 1, 0, 0], [0, 1, 0, 0], [0, 0, 0, 0]]);
         /* 360 degrees */
         rotate(&mut f);
-        assert_eq!(f.layout, [[0, 0, 0, 0], [1, 1, 1, 0], [0, 0, 1, 0], [0, 0, 0, 0]]);
+        assert_shape(&f, &[[0, 0, 0, 0], [1, 1, 1, 0], [0, 0, 1, 0], [0, 0, 0, 0]]);
     }
 
     #[test]
@@ -223,16 +237,16 @@ mod tests {
         let mut f = Tetromino::new(Shape::LShape);
         /* 90 degrees */
         rotate(&mut f);
-        assert_eq!(f.layout, [[1, 1, 0, 0], [0, 1, 0, 0], [0, 1, 0, 0], [0, 0, 0, 0]]);
+        assert_shape(&f, &[[1, 1, 0, 0], [0, 1, 0, 0], [0, 1, 0, 0], [0, 0, 0, 0]]);
         /* 180 degrees */
         rotate(&mut f);
-        assert_eq!(f.layout, [[0, 0, 1, 0], [1, 1, 1, 0], [0, 0, 0, 0], [0, 0, 0, 0]]);
+        assert_shape(&f, &[[0, 0, 1, 0], [1, 1, 1, 0], [0, 0, 0, 0], [0, 0, 0, 0]]);
         /* 270 degrees */
         rotate(&mut f);
-        assert_eq!(f.layout, [[0, 1, 0, 0], [0, 1, 0, 0], [0, 1, 1, 0], [0, 0, 0, 0]]);
+        assert_shape(&f, &[[0, 1, 0, 0], [0, 1, 0, 0], [0, 1, 1, 0], [0, 0, 0, 0]]);
         /* 360 degrees */
         rotate(&mut f);
-        assert_eq!(f.layout, [[0, 0, 0, 0], [1, 1, 1, 0], [1, 0, 0, 0], [0, 0, 0, 0]]);
+        assert_shape(&f, &[[0, 0, 0, 0], [1, 1, 1, 0], [1, 0, 0, 0], [0, 0, 0, 0]]);
     }
 
     #[test]
@@ -240,16 +254,16 @@ mod tests {
         let mut f = Tetromino::new(Shape::SShape);
         /* 90 degrees */
         rotate(&mut f);
-        assert_eq!(f.layout, [[0, 1, 0, 0], [0, 1, 1, 0], [0, 0, 1, 0], [0, 0, 0, 0]]);
+        assert_shape(&f, &[[0, 1, 0, 0], [0, 1, 1, 0], [0, 0, 1, 0], [0, 0, 0, 0]]);
         /* 180 degrees */
         rotate(&mut f);
-        assert_eq!(f.layout, [[0, 0, 0, 0], [0, 1, 1, 0], [1, 1, 0, 0], [0, 0, 0, 0]]);
+        assert_shape(&f, &[[0, 0, 0, 0], [0, 1, 1, 0], [1, 1, 0, 0], [0, 0, 0, 0]]);
         /* 270 degrees */
         rotate(&mut f);
-        assert_eq!(f.layout, [[0, 1, 0, 0], [0, 1, 1, 0], [0, 0, 1, 0], [0, 0, 0, 0]]);
+        assert_shape(&f, &[[0, 1, 0, 0], [0, 1, 1, 0], [0, 0, 1, 0], [0, 0, 0, 0]]);
         /* 360 degrees */
         rotate(&mut f);
-        assert_eq!(f.layout, [[0, 0, 0, 0], [0, 1, 1, 0], [1, 1, 0, 0], [0, 0, 0, 0]]);
+        assert_shape(&f, &[[0, 0, 0, 0], [0, 1, 1, 0], [1, 1, 0, 0], [0, 0, 0, 0]]);
     }
 
     #[test]
@@ -257,15 +271,15 @@ mod tests {
         let mut f = Tetromino::new(Shape::ZShape);
         /* 90 degrees */
         rotate(&mut f);
-        assert_eq!(f.layout, [[0, 0, 1, 0], [0, 1, 1, 0], [0, 1, 0, 0], [0, 0, 0, 0]]);
+        assert_shape(&f, &[[0, 0, 1, 0], [0, 1, 1, 0], [0, 1, 0, 0], [0, 0, 0, 0]]);
         /* 180 degrees */
         rotate(&mut f);
-        assert_eq!(f.layout, [[0, 0, 0, 0], [1, 1, 0, 0], [0, 1, 1, 0], [0, 0, 0, 0]]);
+        assert_shape(&f, &[[0, 0, 0, 0], [1, 1, 0, 0], [0, 1, 1, 0], [0, 0, 0, 0]]);
         /* 270 degrees */
         rotate(&mut f);
-        assert_eq!(f.layout, [[0, 0, 1, 0], [0, 1, 1, 0], [0, 1, 0, 0], [0, 0, 0, 0]]);
+        assert_shape(&f, &[[0, 0, 1, 0], [0, 1, 1, 0], [0, 1, 0, 0], [0, 0, 0, 0]]);
         /* 360 degrees */
         rotate(&mut f);
-        assert_eq!(f.layout, [[0, 0, 0, 0], [1, 1, 0, 0], [0, 1, 1, 0], [0, 0, 0, 0]]);
+        assert_shape(&f, &[[0, 0, 0, 0], [1, 1, 0, 0], [0, 1, 1, 0], [0, 0, 0, 0]]);
     }
 }
