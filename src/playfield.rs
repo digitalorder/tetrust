@@ -135,6 +135,10 @@ impl Playfield {
     }
 
     pub fn move_tetro(self: &Self, tetro: &mut FieldTetromino, dir: Dir) -> bool {
+        if tetro.tetro.shape == figures::Shape::NoShape {
+            return false;
+        }
+
         let new_coords = match dir {
             Dir::Down => Coords{col: tetro.coords.col, row: tetro.coords.row - 1},
             Dir::Left => Coords{col: tetro.coords.col - 1, row: tetro.coords.row},
@@ -151,6 +155,10 @@ impl Playfield {
     }
 
     pub fn turn_tetro(self: &Self, tetro: &mut FieldTetromino) -> bool {
+        if tetro.tetro.shape == figures::Shape::NoShape {
+            return false;
+        }
+
         let mut turned_tetro = *tetro;
         figures::rotate(&mut turned_tetro.tetro);
 
