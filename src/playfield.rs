@@ -40,6 +40,19 @@ pub enum Dir {
     Rotate,
 }
 
+#[derive(Debug, PartialEq)]
+pub enum ShapeAtType {
+    Static,
+    Active,
+    Ghost,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct ShapeAt {
+    pub shape_at_type: ShapeAtType,
+    pub shape: figures::Shape,
+}
+
 pub struct Playfield {
     storage: Storage,
 }
@@ -116,21 +129,31 @@ impl Playfield {
      * \return A tuple. First item is shape for given coordinate or figures::Shape::NoShape.
      * Second item is true if given shape belongs to active tetromino.
      */
-    pub fn shape_at(self: &Self, coords: &Coords, active_tetro: &FieldTetromino) -> (figures::Shape, bool) {
+    pub fn shape_at(self: &Self, coords: &Coords, active_tetro: &FieldTetromino, ghost_tetro: &FieldTetromino) -> ShapeAt {
         if coords.col < 0 || coords.col > WIDTH || coords.row < 0 || coords.row > HEIGHT {
-            (figures::Shape::NoShape, false)
+            ShapeAt{shape: figures::Shape::NoShape, shape_at_type: ShapeAtType::Static}
         } else {
-            let (inside, active_coords) = if active_tetro.tetro.shape == figures::Shape::NoShape {
+            let (inside_active, active_coords) = if active_tetro.tetro.shape == figures::Shape::NoShape {
                 (false, Coords{row: 0, col: 0})
             } else {
                 Playfield::inside_tetro_coords(&coords, &active_tetro.coords)
             };
 
-            if inside && (active_tetro.tetro.shape_at(&active_coords) != figures::Shape::NoShape) {
-                (active_tetro.tetro.shape, true)
+            let (inside_ghost, ghost_coords) = if ghost_tetro.tetro.shape == figures::Shape::NoShape {
+                (false, Coords{row: 0, col: 0})
             } else {
-                (self.storage.playfield[coords.row as usize][coords.col as usize], false)
+                Playfield::inside_tetro_coords(&coords, &ghost_tetro.coords)
+            };
+
+            if inside_active && active_tetro.tetro.shape_at(&active_coords) != figures::Shape::NoShape {
+                return ShapeAt{shape: active_tetro.tetro.shape, shape_at_type: ShapeAtType::Active};
             }
+
+            if inside_ghost && ghost_tetro.tetro.shape_at(&ghost_coords) != figures::Shape::NoShape {
+                return ShapeAt{shape: active_tetro.tetro.shape, shape_at_type: ShapeAtType::Ghost};
+            }
+
+            return ShapeAt{shape: self.storage.playfield[coords.row as usize][coords.col as usize], shape_at_type: ShapeAtType::Static}
         }
     }
 
@@ -214,8 +237,10 @@ mod tests {
         let playfield: Playfield = Playfield::new(Default::default());
         let active_tetro = FieldTetromino::default();
 
-        assert_eq!(playfield.shape_at(&Coords{col: 0, row: 0}, &active_tetro), (figures::Shape::NoShape, false));
-        assert_eq!(playfield.shape_at(&Coords{col: WIDTH + 1, row: HEIGHT + 1}, &active_tetro), (figures::Shape::NoShape, false));
+        assert_eq!(playfield.shape_at(&Coords{col: 0, row: 0}, &active_tetro, &active_tetro),
+                   ShapeAt{shape: figures::Shape::NoShape, shape_at_type: ShapeAtType::Static});
+        assert_eq!(playfield.shape_at(&Coords{col: WIDTH + 1, row: HEIGHT + 1}, &active_tetro, &active_tetro),
+                   ShapeAt{shape: figures::Shape::NoShape, shape_at_type: ShapeAtType::Static});
     }
 
     #[test]
@@ -223,28 +248,45 @@ mod tests {
         let mut playfield: Playfield = Playfield::new(Default::default());
         let tetro = figures::Tetromino::new(figures::Shape::OShape);
         let active_tetro = FieldTetromino::default();
+        let ghost_tetro = active_tetro;
         let place_coords = Coords{col: 5, row: 10};
 
         let place_result = playfield.place(&tetro, place_coords);
         assert_eq!(place_result.is_ok(), true);
 
         // check for every position that shape is either OShape or None
-        assert_eq!(playfield.shape_at(&Coords{..place_coords}, &active_tetro), (figures::Shape::NoShape, false));
-        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col + 1, row: place_coords.row}, &active_tetro), (figures::Shape::NoShape, false));
-        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col + 2, row: place_coords.row}, &active_tetro), (figures::Shape::NoShape, false));
-        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col + 3, row: place_coords.row}, &active_tetro), (figures::Shape::NoShape, false));
-        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col, row: place_coords.row - 1}, &active_tetro), (figures::Shape::NoShape, false));
-        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col + 1, row: place_coords.row - 1}, &active_tetro), (figures::Shape::OShape, false));
-        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col + 2, row: place_coords.row - 1}, &active_tetro), (figures::Shape::OShape, false));
-        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col + 3, row: place_coords.row - 1}, &active_tetro), (figures::Shape::NoShape, false));
-        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col, row: place_coords.row - 2}, &active_tetro), (figures::Shape::NoShape, false));
-        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col + 1, row: place_coords.row - 2}, &active_tetro), (figures::Shape::OShape, false));
-        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col + 2, row: place_coords.row - 2}, &active_tetro), (figures::Shape::OShape, false));
-        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col + 3, row: place_coords.row - 2}, &active_tetro), (figures::Shape::NoShape, false));
-        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col, row: place_coords.row - 3}, &active_tetro), (figures::Shape::NoShape, false));
-        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col + 1, row: place_coords.row - 3}, &active_tetro), (figures::Shape::NoShape, false));
-        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col + 2, row: place_coords.row - 3}, &active_tetro), (figures::Shape::NoShape, false));
-        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col + 3, row: place_coords.row - 3}, &active_tetro), (figures::Shape::NoShape, false));
+        assert_eq!(playfield.shape_at(&Coords{..place_coords}, &active_tetro, &ghost_tetro),
+                   ShapeAt{shape: figures::Shape::NoShape, shape_at_type: ShapeAtType::Static});
+        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col + 1, row: place_coords.row}, &active_tetro, &ghost_tetro),
+                   ShapeAt{shape: figures::Shape::NoShape, shape_at_type: ShapeAtType::Static});
+        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col + 2, row: place_coords.row}, &active_tetro, &ghost_tetro),
+                   ShapeAt{shape: figures::Shape::NoShape, shape_at_type: ShapeAtType::Static});
+        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col + 3, row: place_coords.row}, &active_tetro, &ghost_tetro),
+                   ShapeAt{shape: figures::Shape::NoShape, shape_at_type: ShapeAtType::Static});
+        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col, row: place_coords.row - 1}, &active_tetro, &ghost_tetro),
+                   ShapeAt{shape: figures::Shape::NoShape, shape_at_type: ShapeAtType::Static});
+        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col + 1, row: place_coords.row - 1}, &active_tetro, &ghost_tetro),
+                   ShapeAt{shape: figures::Shape::OShape, shape_at_type: ShapeAtType::Static});
+        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col + 2, row: place_coords.row - 1}, &active_tetro, &ghost_tetro),
+                   ShapeAt{shape: figures::Shape::OShape, shape_at_type: ShapeAtType::Static});
+        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col + 3, row: place_coords.row - 1}, &active_tetro, &ghost_tetro),
+                   ShapeAt{shape: figures::Shape::NoShape, shape_at_type: ShapeAtType::Static});
+        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col, row: place_coords.row - 2}, &active_tetro, &ghost_tetro),
+                   ShapeAt{shape: figures::Shape::NoShape, shape_at_type: ShapeAtType::Static});
+        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col + 1, row: place_coords.row - 2}, &active_tetro, &ghost_tetro),
+                   ShapeAt{shape: figures::Shape::OShape, shape_at_type: ShapeAtType::Static});
+        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col + 2, row: place_coords.row - 2}, &active_tetro, &ghost_tetro),
+                   ShapeAt{shape: figures::Shape::OShape, shape_at_type: ShapeAtType::Static});
+        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col + 3, row: place_coords.row - 2}, &active_tetro, &ghost_tetro),
+                   ShapeAt{shape: figures::Shape::NoShape, shape_at_type: ShapeAtType::Static});
+        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col, row: place_coords.row - 3}, &active_tetro, &ghost_tetro),
+                   ShapeAt{shape: figures::Shape::NoShape, shape_at_type: ShapeAtType::Static});
+        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col + 1, row: place_coords.row - 3}, &active_tetro, &ghost_tetro),
+                   ShapeAt{shape: figures::Shape::NoShape, shape_at_type: ShapeAtType::Static});
+        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col + 2, row: place_coords.row - 3}, &active_tetro, &ghost_tetro),
+                   ShapeAt{shape: figures::Shape::NoShape, shape_at_type: ShapeAtType::Static});
+        assert_eq!(playfield.shape_at(&Coords{col: place_coords.col + 3, row: place_coords.row - 3}, &active_tetro, &ghost_tetro),
+                   ShapeAt{shape: figures::Shape::NoShape, shape_at_type: ShapeAtType::Static});
     }
 
     #[test]
@@ -255,24 +297,41 @@ mod tests {
             tetro: figures::Tetromino::new(figures::Shape::OShape),
             coords: create_coords,
         };
+        let ghost_tetro = active_tetro;
 
         // check for every position that shape is either OShape or None
-        assert_eq!(playfield.shape_at(&Coords{..create_coords}, &active_tetro), (figures::Shape::NoShape, false));
-        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col + 1, row: create_coords.row}, &active_tetro), (figures::Shape::NoShape, false));
-        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col + 2, row: create_coords.row}, &active_tetro), (figures::Shape::NoShape, false));
-        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col + 3, row: create_coords.row}, &active_tetro), (figures::Shape::NoShape, false));
-        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col, row: create_coords.row - 1}, &active_tetro), (figures::Shape::NoShape, false));
-        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col + 1, row: create_coords.row - 1}, &active_tetro), (figures::Shape::OShape, true));
-        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col + 2, row: create_coords.row - 1}, &active_tetro), (figures::Shape::OShape, true));
-        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col + 3, row: create_coords.row - 1}, &active_tetro), (figures::Shape::NoShape, false));
-        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col, row: create_coords.row - 2}, &active_tetro), (figures::Shape::NoShape, false));
-        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col + 1, row: create_coords.row - 2}, &active_tetro), (figures::Shape::OShape, true));
-        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col + 2, row: create_coords.row - 2}, &active_tetro), (figures::Shape::OShape, true));
-        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col + 3, row: create_coords.row - 2}, &active_tetro), (figures::Shape::NoShape, false));
-        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col, row: create_coords.row - 3}, &active_tetro), (figures::Shape::NoShape, false));
-        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col + 1, row: create_coords.row - 3}, &active_tetro), (figures::Shape::NoShape, false));
-        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col + 2, row: create_coords.row - 3}, &active_tetro), (figures::Shape::NoShape, false));
-        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col + 3, row: create_coords.row - 3}, &active_tetro), (figures::Shape::NoShape, false));
+        assert_eq!(playfield.shape_at(&Coords{..create_coords}, &active_tetro, &ghost_tetro),
+                   ShapeAt{shape: figures::Shape::NoShape, shape_at_type: ShapeAtType::Static});
+        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col + 1, row: create_coords.row}, &active_tetro, &ghost_tetro),
+                   ShapeAt{shape: figures::Shape::NoShape, shape_at_type: ShapeAtType::Static});
+        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col + 2, row: create_coords.row}, &active_tetro, &ghost_tetro),
+                   ShapeAt{shape: figures::Shape::NoShape, shape_at_type: ShapeAtType::Static});
+        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col + 3, row: create_coords.row}, &active_tetro, &ghost_tetro),
+                   ShapeAt{shape: figures::Shape::NoShape, shape_at_type: ShapeAtType::Static});
+        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col, row: create_coords.row - 1}, &active_tetro, &ghost_tetro),
+                   ShapeAt{shape: figures::Shape::NoShape, shape_at_type: ShapeAtType::Static});
+        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col + 1, row: create_coords.row - 1}, &active_tetro, &ghost_tetro),
+                   ShapeAt{shape: figures::Shape::OShape, shape_at_type: ShapeAtType::Active});
+        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col + 2, row: create_coords.row - 1}, &active_tetro, &ghost_tetro),
+                   ShapeAt{shape: figures::Shape::OShape, shape_at_type: ShapeAtType::Active});
+        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col + 3, row: create_coords.row - 1}, &active_tetro, &ghost_tetro),
+                   ShapeAt{shape: figures::Shape::NoShape, shape_at_type: ShapeAtType::Static});
+        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col, row: create_coords.row - 2}, &active_tetro, &ghost_tetro),
+                   ShapeAt{shape: figures::Shape::NoShape, shape_at_type: ShapeAtType::Static});
+        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col + 1, row: create_coords.row - 2}, &active_tetro, &ghost_tetro),
+                   ShapeAt{shape: figures::Shape::OShape, shape_at_type: ShapeAtType::Active});
+        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col + 2, row: create_coords.row - 2}, &active_tetro, &ghost_tetro),
+                   ShapeAt{shape: figures::Shape::OShape, shape_at_type: ShapeAtType::Active});
+        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col + 3, row: create_coords.row - 2}, &active_tetro, &ghost_tetro),
+                   ShapeAt{shape: figures::Shape::NoShape, shape_at_type: ShapeAtType::Static});
+        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col, row: create_coords.row - 3}, &active_tetro, &ghost_tetro),
+                   ShapeAt{shape: figures::Shape::NoShape, shape_at_type: ShapeAtType::Static});
+        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col + 1, row: create_coords.row - 3}, &active_tetro, &ghost_tetro),
+                   ShapeAt{shape: figures::Shape::NoShape, shape_at_type: ShapeAtType::Static});
+        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col + 2, row: create_coords.row - 3}, &active_tetro, &ghost_tetro),
+                   ShapeAt{shape: figures::Shape::NoShape, shape_at_type: ShapeAtType::Static});
+        assert_eq!(playfield.shape_at(&Coords{col: create_coords.col + 3, row: create_coords.row - 3}, &active_tetro, &ghost_tetro),
+                   ShapeAt{shape: figures::Shape::NoShape, shape_at_type: ShapeAtType::Static});
     }
 
     #[test]
@@ -332,9 +391,12 @@ mod tests {
         assert_eq!(place_result.is_ok(), true);
 
         /* verify that the bottom row is shown properly */
-        assert_eq!(playfield.shape_at(&Coords{col: 0, row: 0}, &FieldTetromino::default()), (figures::Shape::LShape, false));
-        assert_eq!(playfield.shape_at(&Coords{col: 1, row: 0}, &FieldTetromino::default()), (figures::Shape::LShape, false));
-        assert_eq!(playfield.shape_at(&Coords{col: 2, row: 0}, &FieldTetromino::default()), (figures::Shape::LShape, false));
+        assert_eq!(playfield.shape_at(&Coords{col: 0, row: 0}, &FieldTetromino::default(), &FieldTetromino::default()),
+                   ShapeAt{shape: figures::Shape::LShape, shape_at_type: ShapeAtType::Static});
+        assert_eq!(playfield.shape_at(&Coords{col: 1, row: 0}, &FieldTetromino::default(), &FieldTetromino::default()),
+                   ShapeAt{shape: figures::Shape::LShape, shape_at_type: ShapeAtType::Static});
+        assert_eq!(playfield.shape_at(&Coords{col: 2, row: 0}, &FieldTetromino::default(), &FieldTetromino::default()),
+                   ShapeAt{shape: figures::Shape::LShape, shape_at_type: ShapeAtType::Static});
     }
 
     #[test]

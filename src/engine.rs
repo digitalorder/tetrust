@@ -90,7 +90,9 @@ pub mod engine {
             game.view.show_static(game.level, game.score, game.lines_cleared);
             game.view.show_next(&game.next_tetro);
             game.view_outdated = false;
-            game.view.show_playfield(&game.playfield, &game.active_tetro);
+            let mut ghost_tetro = game.active_tetro;
+            while game.playfield.move_tetro(&mut ghost_tetro, playfield::Dir::Down) {};
+            game.view.show_playfield(&game.playfield, &game.active_tetro, &ghost_tetro);
         }
     }
 

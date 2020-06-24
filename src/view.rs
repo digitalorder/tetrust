@@ -1,4 +1,4 @@
-use crate::playfield::{Playfield, FieldTetromino, WIDTH, HEIGHT, Coords};
+use crate::playfield::{Playfield, FieldTetromino, WIDTH, HEIGHT, Coords, ShapeAt, ShapeAtType};
 use crate::figures::figures::{Shape, Tetromino, LAYOUT_HEIGHT, LAYOUT_WIDTH};
 use std::io::{stdout, Write};
 use termion::raw::IntoRawMode;
@@ -9,21 +9,19 @@ pub struct ConsoleView {
 }
 
 pub trait View {
-
+    fn show_playfield(&self, playfield: &Playfield, active_tetro: &FieldTetromino, ghost_tetro: &FieldTetromino);
     fn show_static(&self, level: u8, score: u32, lines: u32);
     fn show_next(self: &Self, tetro: &Tetromino);
     /* TODO: add rows iterator */
 }
 
 impl View for ConsoleView {
-
-
-    fn show_playfield(&self, playfield: &Playfield, active_tetro: &FieldTetromino) {
+    fn show_playfield(&self, playfield: &Playfield, active_tetro: &FieldTetromino, ghost_tetro: &FieldTetromino) {
         for row in 0..HEIGHT {
             print!("{}", termion::cursor::Goto(2, 3 + (row as u16)));
             for col in 0..WIDTH {
-                let (shape, is_active) = playfield.shape_at(&Coords{row: HEIGHT - row - 1, col: col as i8}, active_tetro);
-                let color = convert_to_color(shape, is_active);
+                let shape_at = playfield.shape_at(&Coords{row: HEIGHT - row - 1, col: col as i8}, active_tetro, ghost_tetro);
+                let color = convert_to_color(shape_at);
                 print!("{}  {}", termion::color::Bg(color), termion::color::Bg(termion::color::Black));
             }
         }
@@ -55,7 +53,7 @@ impl View for ConsoleView {
             print!("{}│", termion::cursor::Goto(BASE_COL, BASE_ROW + (row as u16) + 1));
             for col in 0..LAYOUT_WIDTH {
                 let shape = tetro.shape_at(&Coords{row: row, col: col});
-                let color = convert_to_color(shape, false);
+                let color = convert_to_color(ShapeAt{shape: shape, shape_at_type: ShapeAtType::Static});
                 print!("{}  {}", termion::color::Bg(color), termion::color::Bg(termion::color::Black));
             }
             print!("│");
@@ -66,13 +64,14 @@ impl View for ConsoleView {
     }
 }
 
-fn convert_to_color(shape: Shape, is_active: bool) -> termion::color::AnsiValue {
-    let shift = match is_active {
-        true => 8,
-        false => 0,
+fn convert_to_color(shape_at: ShapeAt) -> termion::color::AnsiValue {
+    let shift = match shape_at.shape_at_type {
+        ShapeAtType::Active => 8,
+        ShapeAtType::Static => 0,
+        ShapeAtType::Ghost => 16,
     };
 
-    match shape {
+    match shape_at.shape {
         Shape::NoShape => termion::color::AnsiValue(0),
         Shape::OShape => termion::color::AnsiValue(1 + shift),
         Shape::IShape => termion::color::AnsiValue(2 + shift),
