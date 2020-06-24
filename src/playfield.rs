@@ -19,14 +19,14 @@ impl Default for Storage {
 }
 
 #[derive(Copy, Clone)]
-pub struct ActiveTetromino {
+pub struct FieldTetromino {
     pub coords: Coords,
     pub tetro: figures::Tetromino,
 }
 
-impl Default for ActiveTetromino {
+impl Default for FieldTetromino {
     fn default() -> Self {
-        ActiveTetromino{
+        FieldTetromino{
             tetro: figures::Tetromino::new(figures::Shape::NoShape),
             coords: Coords{row: 0, col: 0},
         }
@@ -106,7 +106,7 @@ impl Playfield {
      * \return A tuple. First item is shape for given coordinate or figures::Shape::NoShape.
      * Second item is true if given shape belongs to active tetromino.
      */
-    pub fn shape_at(self: &Self, coords: &Coords, active_tetro: &ActiveTetromino) -> (figures::Shape, bool) {
+    pub fn shape_at(self: &Self, coords: &Coords, active_tetro: &FieldTetromino) -> (figures::Shape, bool) {
         if coords.col < 0 || coords.col > WIDTH || coords.row < 0 || coords.row > HEIGHT {
             (figures::Shape::NoShape, false)
         } else {
@@ -124,7 +124,7 @@ impl Playfield {
         }
     }
 
-    pub fn move_tetro(self: &Self, tetro: &mut ActiveTetromino, dir: Dir) -> bool {
+    pub fn move_tetro(self: &Self, tetro: &mut FieldTetromino, dir: Dir) -> bool {
         let new_coords = match dir {
             Dir::Down => Coords{col: tetro.coords.col, row: tetro.coords.row - 1},
             Dir::Left => Coords{col: tetro.coords.col - 1, row: tetro.coords.row},
@@ -140,7 +140,7 @@ impl Playfield {
         false
     }
 
-    pub fn turn_tetro(self: &Self, tetro: &mut ActiveTetromino) -> bool {
+    pub fn turn_tetro(self: &Self, tetro: &mut FieldTetromino) -> bool {
         let mut turned_tetro = *tetro;
         figures::rotate(&mut turned_tetro.tetro);
 
@@ -194,7 +194,7 @@ mod tests {
     #[test]
     fn shape_at_in_and_outside_bounds() {
         let playfield: Playfield = Playfield::new(Default::default());
-        let active_tetro = ActiveTetromino::default();
+        let active_tetro = FieldTetromino::default();
 
         assert_eq!(playfield.shape_at(&Coords{col: 0, row: 0}, &active_tetro), (figures::Shape::NoShape, false));
         assert_eq!(playfield.shape_at(&Coords{col: WIDTH + 1, row: HEIGHT + 1}, &active_tetro), (figures::Shape::NoShape, false));
@@ -204,7 +204,7 @@ mod tests {
     fn shape_at_after_placing_shape() {
         let mut playfield: Playfield = Playfield::new(Default::default());
         let tetro = figures::Tetromino::new(figures::Shape::OShape);
-        let active_tetro = ActiveTetromino::default();
+        let active_tetro = FieldTetromino::default();
         let place_coords = Coords{col: 5, row: 10};
 
         let place_result = playfield.place(&tetro, place_coords);
@@ -233,7 +233,7 @@ mod tests {
     fn shape_at_after_new_active_shape() {
         let playfield: Playfield = Playfield::new(Default::default());
         let create_coords = Coords{col: 5, row: 10};
-        let active_tetro = ActiveTetromino{
+        let active_tetro = FieldTetromino{
             tetro: figures::Tetromino::new(figures::Shape::OShape),
             coords: create_coords,
         };
@@ -260,7 +260,7 @@ mod tests {
     #[test]
     fn bounce_left_wall() {
         let playfield: Playfield = Playfield::new(Default::default());
-        let mut active_tetro = ActiveTetromino{
+        let mut active_tetro = FieldTetromino{
             tetro: figures::Tetromino::new(figures::Shape::OShape),
             coords: Coords{col: -1, row: 10},
         };
@@ -271,7 +271,7 @@ mod tests {
     #[test]
     fn bounce_right_wall() {
         let playfield: Playfield = Playfield::new(Default::default());
-        let mut active_tetro = ActiveTetromino{
+        let mut active_tetro = FieldTetromino{
             tetro: figures::Tetromino::new(figures::Shape::OShape),
             coords: Coords{col: WIDTH - 3, row: 10}
         };
@@ -282,7 +282,7 @@ mod tests {
     #[test]
     fn o_in_bottom_left_corner() {
         let mut playfield: Playfield = Playfield::new(Default::default());
-        let mut active_tetro = ActiveTetromino{
+        let mut active_tetro = FieldTetromino{
             tetro: figures::Tetromino::new(figures::Shape::OShape),
             coords: Coords{col: -1, row: 2},
         };
@@ -301,7 +301,7 @@ mod tests {
          * +----------+
          */
         let mut playfield: Playfield = Playfield::new(Default::default());
-        let mut active_tetro = ActiveTetromino{
+        let mut active_tetro = FieldTetromino{
             tetro: figures::Tetromino::new(figures::Shape::LShape),
             coords: Coords{col: 0, row: 2},
         };
@@ -314,9 +314,9 @@ mod tests {
         assert_eq!(place_result.is_ok(), true);
 
         /* verify that the bottom row is shown properly */
-        assert_eq!(playfield.shape_at(&Coords{col: 0, row: 0}, &ActiveTetromino::default()), (figures::Shape::LShape, false));
-        assert_eq!(playfield.shape_at(&Coords{col: 1, row: 0}, &ActiveTetromino::default()), (figures::Shape::LShape, false));
-        assert_eq!(playfield.shape_at(&Coords{col: 2, row: 0}, &ActiveTetromino::default()), (figures::Shape::LShape, false));
+        assert_eq!(playfield.shape_at(&Coords{col: 0, row: 0}, &FieldTetromino::default()), (figures::Shape::LShape, false));
+        assert_eq!(playfield.shape_at(&Coords{col: 1, row: 0}, &FieldTetromino::default()), (figures::Shape::LShape, false));
+        assert_eq!(playfield.shape_at(&Coords{col: 2, row: 0}, &FieldTetromino::default()), (figures::Shape::LShape, false));
     }
 
     #[test]
@@ -327,7 +327,7 @@ mod tests {
             Coords{col: -1, row: 2}
         );
         assert_eq!(place_result.is_ok(), true);
-        let mut active_tetro = ActiveTetromino{
+        let mut active_tetro = FieldTetromino{
             tetro: figures::Tetromino::new(figures::Shape::OShape),
             coords: Coords{col: -1, row: 4},
         };

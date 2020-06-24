@@ -1,4 +1,4 @@
-use crate::playfield::{Playfield, ActiveTetromino, WIDTH, HEIGHT, Coords};
+use crate::playfield::{Playfield, FieldTetromino, WIDTH, HEIGHT, Coords};
 use crate::figures::figures::{Shape, Tetromino, LAYOUT_HEIGHT, LAYOUT_WIDTH};
 use std::io::{stdout, Write};
 use termion::raw::IntoRawMode;
@@ -9,15 +9,15 @@ pub struct ConsoleView {
 }
 
 pub trait View {
-    fn show_row(&self, playfield: &Playfield, row: i8, active_tetro: &ActiveTetromino) -> Row;
-    fn show_playfield(&self, playfield: &Playfield, active_tetro: &ActiveTetromino);
+    fn show_row(&self, playfield: &Playfield, row: i8, active_tetro: &FieldTetromino) -> Row;
+    fn show_playfield(&self, playfield: &Playfield, active_tetro: &FieldTetromino);
     fn show_static(&self, level: u8, score: u32, lines: u32);
     fn show_next(self: &Self, tetro: &Tetromino);
     /* TODO: add rows iterator */
 }
 
 impl View for ConsoleView {
-    fn show_row(&self, playfield: &Playfield, row: i8, active_tetro: &ActiveTetromino) -> Row {
+    fn show_row(&self, playfield: &Playfield, row: i8, active_tetro: &FieldTetromino) -> Row {
         let mut result: Row = [' '; WIDTH as usize];
         for i in 0..WIDTH as usize {
             let (shape, is_active) = playfield.shape_at(&Coords{row: row, col: i as i8}, active_tetro);
@@ -40,7 +40,7 @@ impl View for ConsoleView {
         result
     }
 
-    fn show_playfield(&self, playfield: &Playfield, active_tetro: &ActiveTetromino) {
+    fn show_playfield(&self, playfield: &Playfield, active_tetro: &FieldTetromino) {
         for row in 0..HEIGHT {
             print!("{}", termion::cursor::Goto(2, 3 + (row as u16)));
             for col in 0..WIDTH {
@@ -118,7 +118,7 @@ mod tests {
     fn show_empty_view() {
         let playfield: Playfield = Playfield::new(Storage::default());
         let view: ConsoleView = ConsoleView{};
-        let active_tetro = ActiveTetromino::default();
+        let active_tetro = FieldTetromino::default();
 
         for i in 0..HEIGHT {
             let row: String = view.show_row(&playfield, i, &active_tetro).iter().collect();
@@ -140,7 +140,7 @@ mod tests {
             Coords{col: 0, row: 5}
         );
         assert_eq!(place_result.is_ok(), true);
-        let active_tetro = ActiveTetromino{
+        let active_tetro = FieldTetromino{
             tetro: figures::Tetromino::new(figures::Shape::LShape),
             coords: Coords{col: 2, row: 4},
         };

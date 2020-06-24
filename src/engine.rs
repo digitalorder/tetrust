@@ -57,7 +57,7 @@ pub mod engine {
         playfield: playfield::Playfield,
         view: &'a dyn View,
         state: State,
-        active_tetro: playfield::ActiveTetromino,
+        active_tetro: playfield::FieldTetromino,
         next_tetro: figures::Tetromino,
         lines_cleared: u32,
         level: u8,
@@ -71,7 +71,7 @@ pub mod engine {
             view: view,
             playfield: playfield,
             state: State::Dropped,
-            active_tetro: playfield::ActiveTetromino::default(),
+            active_tetro: playfield::FieldTetromino::default(),
             next_tetro: figures::Tetromino::new_random(),
             lines_cleared: 0,
             level: 0,
@@ -96,7 +96,7 @@ pub mod engine {
 
     fn row_filled(playfield: &playfield::Playfield, row: i8) -> bool {
         for c in 0..playfield::WIDTH {
-            let (shape, _) = playfield.shape_at(&playfield::Coords{col: c, row: row}, &playfield::ActiveTetromino::default());
+            let (shape, _) = playfield.shape_at(&playfield::Coords{col: c, row: row}, &playfield::FieldTetromino::default());
             if shape == figures::Shape::NoShape {
                 return false;
             }
@@ -120,7 +120,7 @@ pub mod engine {
 
     fn create_new_tetro(game: &mut Game) -> State {
         game.view_outdated = true;
-        game.active_tetro = playfield::ActiveTetromino{
+        game.active_tetro = playfield::FieldTetromino{
             coords: playfield::Coords{row: playfield::HEIGHT - 1,
                 col: playfield::WIDTH / 2 - 2},
             tetro: game.next_tetro
