@@ -68,7 +68,7 @@ fn convert_to_color(shape_at: ShapeAt) -> termion::color::AnsiValue {
     let shift = match shape_at.shape_at_type {
         ShapeAtType::Active => 8,
         ShapeAtType::Static => 0,
-        ShapeAtType::Ghost => 16,
+        ShapeAtType::Ghost => return termion::color::AnsiValue::grayscale(3),
     };
 
     match shape_at.shape {
