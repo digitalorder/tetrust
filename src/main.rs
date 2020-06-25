@@ -8,26 +8,13 @@ use std::io::{stdin, stdout, Write};
 use termion::event::Key;
 use termion::input::TermRead;
 use termion::raw::IntoRawMode;
+use clap::{App};
 
-fn main() {
-    match termion::terminal_size() {
-        Ok(v) => {
-            let (width, height) = v;
-
-            if width < 80 || height < 25 {
-                println!("Terminal size should be greater than (W:80, H:25). Given (W:{}, H:{})", width, height);
-                return;
-            }
-        }
-        Err(e) => {
-            println!("Cannot read terminal dimensions: {:?}", e);
-            return
-        },
-    }
-
+fn do_game(no_ghost: bool) {
     let playfield = playfield::Playfield::new(Default::default());
     let view = view::ConsoleView{};
-    let mut game = engine::new_game(playfield, &view);
+    let config = engine::Config{no_ghost: no_ghost};
+    let mut game = engine::new_game(config, playfield, &view);
 
     let (timer_tx, rx) = mpsc::channel();
     let keyboard_tx = timer_tx.clone();
@@ -72,4 +59,33 @@ fn main() {
     }
 
     write!(stdout, "{}", termion::cursor::Show).unwrap();
+}
+
+fn main() {
+    match termion::terminal_size() {
+        Ok(v) => {
+            let (width, height) = v;
+
+            if width < 80 || height < 25 {
+                println!("Terminal size should be greater than (W:80, H:25). Given (W:{}, H:{})", width, height);
+                return;
+            }
+        }
+        Err(e) => {
+            println!("Cannot read terminal dimensions: {:?}", e);
+            return
+        },
+    }
+
+    let matches = App::new("tetrust")
+                    .version(env!("CARGO_PKG_VERSION"))
+                    .author("Denis Vasilkovskii <digitalorder>")
+                    .about("Classic tetris game implemented in Rust")
+                    .args_from_usage(
+                        "-g, --no-ghost 'Disables ghost tetro for easy dropping'")
+                    .get_matches();
+
+    let no_ghost = matches.is_present("no-ghost");
+    println!("no ghost tetro: {}", no_ghost);
+    do_game(no_ghost);
 }
