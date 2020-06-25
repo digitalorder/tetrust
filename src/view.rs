@@ -64,23 +64,51 @@ impl View for ConsoleView {
     }
 }
 
-fn convert_to_color(shape_at: ShapeAt) -> termion::color::AnsiValue {
-    let shift = match shape_at.shape_at_type {
-        ShapeAtType::Active => 8,
-        ShapeAtType::Static => 0,
-        ShapeAtType::Ghost => return termion::color::AnsiValue::grayscale(3),
-    };
+struct ColorTable {
+    shape: Shape,
+    active_color: termion::color::AnsiValue,
+    static_color: termion::color::AnsiValue,
+}
 
-    match shape_at.shape {
-        Shape::NoShape => termion::color::AnsiValue(0),
-        Shape::OShape => termion::color::AnsiValue(1 + shift),
-        Shape::IShape => termion::color::AnsiValue(2 + shift),
-        Shape::TShape => termion::color::AnsiValue(3 + shift),
-        Shape::JShape => termion::color::AnsiValue(4 + shift),
-        Shape::LShape => termion::color::AnsiValue(5 + shift),
-        Shape::SShape => termion::color::AnsiValue(6 + shift),
-        Shape::ZShape => termion::color::AnsiValue(7 + shift),
+macro_rules! rgb_color {
+    ($r:expr,$g:expr,$b:expr) => {
+        termion::color::AnsiValue(16 + 36 * $r + 6 * $g + $b);
+    };
+}
+
+macro_rules! shape_and_color {
+    ($shape:expr, $active:expr, $stat:expr) => {
+        ColorTable{shape: $shape, active_color: $active, static_color: $stat}
+    };
+}
+
+static COLOR_TABLE: &'static [ColorTable] = &[
+    shape_and_color!(Shape::OShape, rgb_color!(5, 5, 0), rgb_color!(3, 3, 0)), // yellow
+    shape_and_color!(Shape::IShape, rgb_color!(1, 5, 5), rgb_color!(0, 3, 3)), // cyan
+    shape_and_color!(Shape::TShape, rgb_color!(5, 0, 5), rgb_color!(2, 0, 2)), // purple
+    shape_and_color!(Shape::SShape, rgb_color!(0, 5, 0), rgb_color!(0, 2, 0)), // green
+    shape_and_color!(Shape::ZShape, rgb_color!(5, 0, 0), rgb_color!(2, 0, 0)), // red
+    shape_and_color!(Shape::JShape, rgb_color!(0, 0, 5), rgb_color!(0, 0, 3)), // blue
+    shape_and_color!(Shape::LShape, rgb_color!(5, 2, 0), rgb_color!(3, 1, 0)), // orange
+];
+
+fn convert_to_color(shape_at: ShapeAt) -> termion::color::AnsiValue {
+    if shape_at.shape_at_type == ShapeAtType::Ghost {
+        return termion::color::AnsiValue::grayscale(3);
     }
+
+    for c in COLOR_TABLE {
+        if c.shape == shape_at.shape {
+            if shape_at.shape_at_type == ShapeAtType::Active {
+                return c.active_color;
+            } else {
+                return c.static_color;
+            }
+        }
+    }
+
+    /* black for every NoShape */
+    termion::color::AnsiValue(0)
 }
 
 #[cfg(test)]
