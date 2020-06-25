@@ -201,7 +201,7 @@ pub mod engine {
                     turn_active(game);
                 } else if event == Event::KeyDrop {
                     while move_active(game, playfield::Dir::Down) {};
-                    game.frame_counter = 24;
+                    game.frame_counter = 30;
                 }
             },
             State::Touched => {
