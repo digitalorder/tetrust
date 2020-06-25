@@ -5,6 +5,10 @@ pub mod engine {
     use std::fmt;
     use std::cmp;
 
+    pub struct Config {
+        pub no_ghost: bool,
+    }
+
     #[derive(Copy, Clone, PartialEq)]
     pub enum State {
         Dropped,
@@ -64,9 +68,10 @@ pub mod engine {
         score: u32,
         frame_counter: u8,
         view_outdated: bool,
+        no_ghost: bool,
     }
 
-    pub fn new_game(playfield: playfield::Playfield, view: &impl View) -> Game {
+    pub fn new_game(config: Config, playfield: playfield::Playfield, view: &impl View) -> Game {
         Game {
             view: view,
             playfield: playfield,
@@ -78,6 +83,7 @@ pub mod engine {
             score: 0,
             frame_counter: 0,
             view_outdated: true,
+            no_ghost: config.no_ghost,
         }
     }
 
@@ -90,8 +96,13 @@ pub mod engine {
             game.view.show_static(game.level, game.score, game.lines_cleared);
             game.view.show_next(&game.next_tetro);
             game.view_outdated = false;
-            let mut ghost_tetro = game.active_tetro;
-            while game.playfield.move_tetro(&mut ghost_tetro, playfield::Dir::Down) {};
+            let ghost_tetro = if game.no_ghost {
+                playfield::FieldTetromino::default()
+            } else {
+                let mut ghost_tetro = game.active_tetro;
+                while game.playfield.move_tetro(&mut ghost_tetro, playfield::Dir::Down) {};
+                ghost_tetro
+            };
             game.view.show_playfield(&game.playfield, &game.active_tetro, &ghost_tetro);
         }
     }
