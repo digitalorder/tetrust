@@ -211,8 +211,13 @@ pub mod engine {
                 } else if event == Event::KeyTurn {
                     turn_active(game);
                 } else if event == Event::KeyDrop {
-                    while move_active(game, playfield::Dir::Down) {};
-                    game.frame_counter = 30;
+                    while move_active(game, playfield::Dir::Down) {
+                        /* reset frame counter only if there was a drop,
+                         * otherwise holding drop key would effectively
+                         * freeze game
+                         */
+                        game.frame_counter = 30;
+                    };
                 }
             },
             State::Touched => {
