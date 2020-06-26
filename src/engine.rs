@@ -155,13 +155,21 @@ pub mod engine {
     }
 
     fn move_active(game: &mut Game, dir: playfield::Dir) -> bool {
-        game.view_outdated = true;
-        game.playfield.move_tetro(&mut game.active_tetro, dir)
+        if game.playfield.move_tetro(&mut game.active_tetro, dir) {
+            game.view_outdated = true;
+            true
+        } else {
+            false
+        }
     }
 
     fn turn_active(game: &mut Game) -> bool {
-        game.view_outdated = true;
-        game.playfield.turn_tetro(&mut game.active_tetro)
+        if game.playfield.turn_tetro(&mut game.active_tetro) {
+            game.view_outdated = true;
+            true
+        } else {
+            false
+        }
     }
 
     fn inc_frame_counter(game: &mut Game) -> bool {
