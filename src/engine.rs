@@ -38,6 +38,7 @@ pub mod engine {
         KeyTurn,
         KeyDown,
         KeyDrop,
+        KeyHold,
         KeyExit,
     }
 
@@ -51,6 +52,7 @@ pub mod engine {
                 Event::KeyExit => "🚪",
                 Event::KeyTurn => "🔁",
                 Event::KeyDrop => "⬆️",
+                Event::KeyHold => "✋",
             };
 
             write!(f, "{}", result)
@@ -227,6 +229,8 @@ pub mod engine {
                          */
                         game.frame_counter = max_frame_count(game.level) - 30;
                     };
+                } else if event == Event::KeyHold {
+                    game.frame_counter = 0;
                 }
             },
             State::Touched => {

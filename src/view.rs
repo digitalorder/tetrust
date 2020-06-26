@@ -31,9 +31,9 @@ impl View for ConsoleView {
         stdout.flush().unwrap();
     }
 
-    fn show_static(self: &Self, level: u8, score: u32, lines: u32) {
-        print!("{}TETRUST v{}. Move: ⬅️ ⬇️ ➡️  Rotate: ⬆️  Drop: Spacebar. Exit: q\n\r",
-               termion::cursor::Goto(1, 1), env!("CARGO_PKG_VERSION"));
+    fn show_static(self: &Self, level: i8, score: u32, lines: u32) {
+        print!("{}Move: ⬅️ ⬇️ ➡️  Rotate: ⬆️  Drop: Spacebar. Hold: h. Exit: q\n\r",
+               termion::cursor::Goto(1, 1));
         print!("┌────────────────────┐\n\r");
         for _ in 0..HEIGHT {
             print!("│                    │\n\r");

@@ -42,6 +42,7 @@ fn do_game(no_ghost: bool) {
                 Key::Down => {let _ = keyboard_tx.send(engine::Event::KeyDown);},
                 Key::Up => {let _ = keyboard_tx.send(engine::Event::KeyTurn);},
                 Key::Char(' ') => {let _ = keyboard_tx.send(engine::Event::KeyDrop);},
+                Key::Char('h') => {let _ = keyboard_tx.send(engine::Event::KeyHold);},
                 Key::Char('q') | Key::Ctrl('z') | Key::Ctrl('c') => {let _ = keyboard_tx.send(engine::Event::KeyExit);},
                 _ => { /* do nothing */ }
             }
