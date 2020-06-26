@@ -64,9 +64,9 @@ pub mod engine {
         active_tetro: playfield::FieldTetromino,
         next_tetro: figures::Tetromino,
         lines_cleared: u32,
-        level: u8,
+        level: i8,
         score: u32,
-        frame_counter: u8,
+        frame_counter: i8,
         view_outdated: bool,
         no_ghost: bool,
     }
@@ -136,7 +136,7 @@ pub mod engine {
         }
     }
 
-    fn score_increment(level: u8, cleared_lines: u8) -> u32 {
+    fn score_increment(level: i8, cleared_lines: u8) -> u32 {
         /* Level 1 line         2 lines         3 lines         4 lines
          * 0     40             100             300             1200
          * 1     80             200             600             2400
@@ -172,20 +172,21 @@ pub mod engine {
         }
     }
 
-    fn inc_frame_counter(game: &mut Game) -> bool {
-
-        let max_frame_count = match game.level {
-            0..=8 => 48 - 5 * game.level,
+    fn max_frame_count(level: i8) -> i8 {
+        match level {
+            0..=8 => 48 - 5 * level,
             9 => 6,
             10..=12 => 5,
             13..=15 => 4,
             16..=18 => 3,
             19..=28 => 2,
             _ => 1
-        };
+        }
+    }
 
+    fn inc_frame_counter(game: &mut Game) -> bool {
         game.frame_counter += 1;
-        if game.frame_counter >= max_frame_count {
+        if game.frame_counter >= max_frame_count(game.level) {
             game.frame_counter = 0;
             true
         } else {
@@ -224,7 +225,7 @@ pub mod engine {
                          * otherwise holding drop key would effectively
                          * freeze game
                          */
-                        game.frame_counter = 30;
+                        game.frame_counter = max_frame_count(game.level) - 30;
                     };
                 }
             },
@@ -235,7 +236,7 @@ pub mod engine {
                 if event == Event::Timeout {
                     let removed = remove_filled(&mut game.playfield);
                     game.lines_cleared += removed as u32;
-                    game.level = cmp::max(game.level, (game.lines_cleared / 10) as u8);
+                    game.level = cmp::max(game.level, (game.lines_cleared / 10) as i8);
 
                     if removed > 0 {
                         game.score += score_increment(game.level, removed);

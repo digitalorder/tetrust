@@ -10,7 +10,7 @@ pub struct ConsoleView {
 
 pub trait View {
     fn show_playfield(&self, playfield: &Playfield, active_tetro: &FieldTetromino, ghost_tetro: &FieldTetromino);
-    fn show_static(&self, level: u8, score: u32, lines: u32);
+    fn show_static(&self, level: i8, score: u32, lines: u32);
     fn show_next(self: &Self, tetro: &Tetromino);
     /* TODO: add rows iterator */
 }
