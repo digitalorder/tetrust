@@ -7,6 +7,7 @@ pub mod engine {
 
     pub struct Config {
         pub no_ghost: bool,
+        pub level: u8,
     }
 
     #[derive(Copy, Clone, PartialEq)]
@@ -81,7 +82,7 @@ pub mod engine {
             active_tetro: playfield::FieldTetromino::default(),
             next_tetro: figures::Tetromino::new_random(),
             lines_cleared: 0,
-            level: 0,
+            level: if config.level < 29 { config.level as i8 } else { 29 },
             score: 0,
             frame_counter: 0,
             view_outdated: true,

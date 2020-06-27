@@ -8,12 +8,12 @@ use std::io::{stdin, stdout, Write};
 use termion::event::Key;
 use termion::input::TermRead;
 use termion::raw::IntoRawMode;
-use clap::{App};
+use clap::{App, value_t};
 
-fn do_game(no_ghost: bool) {
+fn do_game(no_ghost: bool, level: u8) {
     let playfield = playfield::Playfield::new(Default::default());
     let view = view::ConsoleView{};
-    let config = engine::Config{no_ghost: no_ghost};
+    let config = engine::Config{no_ghost: no_ghost, level: level};
     let mut game = engine::new_game(config, playfield, &view);
 
     let (timer_tx, rx) = mpsc::channel();
@@ -83,10 +83,12 @@ fn main() {
                     .author("Denis Vasilkovskii <digitalorder>")
                     .about("Classic tetris game implemented in Rust")
                     .args_from_usage(
-                        "-g, --no-ghost 'Disables ghost tetro for easy dropping'")
+                        "-g, --no-ghost 'Disables ghost tetro for easy dropping'
+                         -l, --level [level] 'Start level (0-29)'")
                     .get_matches();
 
     let no_ghost = matches.is_present("no-ghost");
-    println!("no ghost tetro: {}", no_ghost);
-    do_game(no_ghost);
+    let level = value_t!(matches, "level", u8).unwrap_or(0);
+    println!("no ghost tetro: {} level: {}", no_ghost, level);
+    do_game(no_ghost, level);
 }
