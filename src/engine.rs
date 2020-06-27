@@ -97,7 +97,7 @@ pub mod engine {
     pub fn draw_frame(game: &mut Game) {
         if game.view_outdated {
             game.view.show_static(game.level, game.score, game.lines_cleared);
-            game.view.show_next(&game.next_tetro);
+            game.view.show_next(&mut game.next_tetro);
             game.view_outdated = false;
             let ghost_tetro = if game.no_ghost {
                 playfield::FieldTetromino::default()

@@ -15,7 +15,7 @@ const SCORE_BASE_COL: u16 = 26;
 pub trait View {
     fn show_playfield(&self, playfield: &Playfield, active_tetro: &FieldTetromino, ghost_tetro: &FieldTetromino);
     fn show_static(&self, level: i8, score: u32, lines: u32);
-    fn show_next(self: &Self, tetro: &Tetromino);
+    fn show_next(self: &Self, tetro: &mut Tetromino);
     /* TODO: add rows iterator */
 }
 
@@ -46,21 +46,13 @@ impl View for ConsoleView {
         stdout.flush().unwrap();
     }
 
-    fn show_next(self: &Self, tetro: &Tetromino) {
-        const BASE_ROW: u16 = 4;
-        const BASE_COL: u16 = 26;
-        print!("{}", termion::cursor::Goto(BASE_COL, BASE_ROW));
-        print!("┌────────┐");
-        for row in 0..LAYOUT_HEIGHT {
-            print!("{}│", termion::cursor::Goto(BASE_COL, BASE_ROW + (row as u16) + 1));
-            for col in 0..LAYOUT_WIDTH {
-                let shape = tetro.shape_at(&Coords{row: row, col: col});
-                let color = convert_to_color(ShapeAt{shape: shape, shape_at_type: ShapeAtType::Static});
-                print!("{}  {}", termion::color::Bg(color), termion::color::Bg(termion::color::Black));
-            }
-            print!("│");
+    fn show_next(self: &Self, tetro: &mut Tetromino) {
+        for (coords, shape) in tetro {
+            let color = convert_to_color(ShapeAt{shape: shape, shape_at_type: ShapeAtType::Static});
+            print!("{}{}  {}", termion::cursor::Goto((NEXT_TETRO_BASE_COL + 1 + coords.col * 2) as u16,
+                                                     (NEXT_TETRO_BASE_ROW + 1 + coords.row) as u16),
+                               termion::color::Bg(color), termion::color::Bg(termion::color::Black));
         }
-        print!("{}└────────┘", termion::cursor::Goto(BASE_COL, BASE_ROW + 5));
         let mut stdout = stdout().into_raw_mode().unwrap();
         stdout.flush().unwrap();
     }
