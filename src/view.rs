@@ -7,6 +7,10 @@ extern crate termion;
 pub type Row = [char; WIDTH as usize];
 pub struct ConsoleView {
 }
+const NEXT_TETRO_BASE_ROW: i8 = 4;
+const NEXT_TETRO_BASE_COL: i8 = 26;
+const SCORE_BASE_ROW: u16 = 2;
+const SCORE_BASE_COL: u16 = 26;
 
 pub trait View {
     fn show_playfield(&self, playfield: &Playfield, active_tetro: &FieldTetromino, ghost_tetro: &FieldTetromino);
@@ -34,12 +38,10 @@ impl View for ConsoleView {
     fn show_static(self: &Self, level: i8, score: u32, lines: u32) {
         print!("{}Move: ⬅️ ⬇️ ➡️  Rotate: ⬆️  Drop: Spacebar. Hold: h. Exit: q\n\r",
                termion::cursor::Goto(1, 1));
-        print!("┌────────────────────┐\n\r");
-        for _ in 0..HEIGHT {
-            print!("│                    │\n\r");
-        }
-        print!("└────────────────────┘\n\r");
-        print!("{}Level: {} Score: {} Lines: {}", termion::cursor::Goto(26, 2), level, score, lines);
+        draw_rectangle(&Coords{row: 2, col: 1}, HEIGHT, WIDTH * 2);
+        draw_rectangle(&Coords{row: NEXT_TETRO_BASE_ROW, col: NEXT_TETRO_BASE_COL}, LAYOUT_HEIGHT, LAYOUT_WIDTH * 2);
+        print!("{}Level: {} Score: {} Lines: {}",
+               termion::cursor::Goto(SCORE_BASE_COL, SCORE_BASE_ROW), level, score, lines);
         let mut stdout = stdout().into_raw_mode().unwrap();
         stdout.flush().unwrap();
     }
@@ -62,6 +64,23 @@ impl View for ConsoleView {
         let mut stdout = stdout().into_raw_mode().unwrap();
         stdout.flush().unwrap();
     }
+}
+
+fn draw_rectangle(top_left: &Coords, height: i8, width: i8) {
+    print!("{}┌", termion::cursor::Goto(top_left.col as u16, top_left.row as u16));
+    for _ in top_left.col..top_left.col + width {
+        print!("─");
+    }
+    print!("┐");
+    for r in top_left.row + 1..=top_left.row + height {
+        print!("{}│{}│", termion::cursor::Goto(top_left.col as u16, r as u16),
+                         termion::cursor::Goto((top_left.col + width + 1) as u16, r as u16));
+    }
+    print!("{}└", termion::cursor::Goto(top_left.col as u16, (top_left.row + height + 1) as u16));
+    for _ in top_left.col..top_left.col + width {
+        print!("─");
+    }
+    print!("┘");
 }
 
 struct ColorTable {
