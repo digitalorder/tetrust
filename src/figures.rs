@@ -40,6 +40,8 @@ pub mod figures {
     pub struct Tetromino {
         pub shape: Shape,
         layout: Layout,
+        iter_row: i8,
+        iter_col: i8,
     }
 
     fn rotate_special_i(layout: &mut Layout) {
@@ -114,7 +116,7 @@ pub mod figures {
                 Shape::ZShape => [[0, 0, 0, 0], [1, 1, 0, 0], [0, 1, 1, 0], [0, 0, 0, 0]],
                 Shape::NoShape => [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
             };
-            Tetromino {shape: shape, layout: layout}
+            Tetromino {shape: shape, layout: layout, iter_row: 0, iter_col: 0}
         }
 
         pub fn new_random() -> Tetromino {
@@ -133,6 +135,26 @@ pub mod figures {
                 0 => Shape::NoShape,
                 _ => self.shape,
             }
+        }
+    }
+
+    impl Iterator for Tetromino {
+        type Item = (Coords, Shape);
+
+        fn next(&mut self) -> Option<Self::Item> {
+            let coords = Coords{row: self.iter_row, col: self.iter_col};
+            self.iter_col += 1;
+            if self.iter_col == LAYOUT_WIDTH {
+                self.iter_col = 0;
+                self.iter_row += 1;
+            }
+            if self.iter_row == LAYOUT_HEIGHT {
+                self.iter_row = 0;
+                self.iter_col = 0;
+                return None;
+            }
+
+            Some((coords, self.shape_at(&coords)))
         }
     }
 }
@@ -281,5 +303,18 @@ mod tests {
         /* 360 degrees */
         rotate(&mut f);
         assert_shape(&f, &[[0, 0, 0, 0], [1, 1, 0, 0], [0, 1, 1, 0], [0, 0, 0, 0]]);
+    }
+
+    #[test]
+    fn iterator_interface() {
+        let f = Tetromino::new(Shape::ZShape);
+        /* 90 degrees */
+        let result = [[Shape::NoShape, Shape::NoShape, Shape::NoShape, Shape::NoShape],
+                      [Shape::ZShape, Shape::ZShape, Shape::NoShape, Shape::NoShape],
+                      [Shape::NoShape, Shape::ZShape, Shape::ZShape, Shape::NoShape],
+                      [Shape::NoShape, Shape::NoShape, Shape::NoShape, Shape::NoShape]];
+        for (coords, shape) in f {
+            assert_eq!(shape, result[coords.row as usize][coords.col as usize]);
+        }
     }
 }
