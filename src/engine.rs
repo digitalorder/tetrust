@@ -65,13 +65,15 @@ pub mod engine {
         view: &'a dyn View,
         state: State,
         active_tetro: playfield::FieldTetromino,
+        next_updated: bool,
         next_tetro: figures::Tetromino,
         lines_cleared: u32,
         level: i8,
+        static_updated: bool,
         score: u32,
         score_updated: bool,
         frame_counter: i8,
-        view_outdated: bool,
+        playfield_updated: bool,
         no_ghost: bool,
     }
 
@@ -81,13 +83,15 @@ pub mod engine {
             playfield: playfield,
             state: State::Dropped,
             active_tetro: playfield::FieldTetromino::default(),
+            next_updated: true,
             next_tetro: figures::Tetromino::new_random(),
             lines_cleared: 0,
             level: if config.level < 29 { config.level as i8 } else { 29 },
+            static_updated: true,
             score: 0,
             score_updated: true,
             frame_counter: 0,
-            view_outdated: true,
+            playfield_updated: true,
             no_ghost: config.no_ghost,
         }
     }
@@ -101,10 +105,16 @@ pub mod engine {
             game.score_updated = false;
             game.view.show_score(game.level, game.score, game.lines_cleared);
         };
-        if game.view_outdated {
+        if game.static_updated {
+            game.static_updated = false;
             game.view.show_static();
+        }
+        if game.next_updated {
+            game.next_updated = false;
             game.view.show_next(&mut game.next_tetro);
-            game.view_outdated = false;
+        }
+        if game.playfield_updated {
+            game.playfield_updated = false;
             let ghost_tetro = if game.no_ghost {
                 playfield::FieldTetromino::default()
             } else {
@@ -130,10 +140,10 @@ pub mod engine {
     }
 
     fn create_new_tetro(game: &mut Game) -> State {
-        game.view_outdated = true;
+        game.next_updated = true;
         game.active_tetro = playfield::FieldTetromino{
             coords: playfield::Coords{row: playfield::HEIGHT - 1,
-                col: playfield::WIDTH / 2 - 2},
+                                      col: playfield::WIDTH / 2 - 2},
             tetro: game.next_tetro
         };
         game.next_tetro = figures::Tetromino::new_random();
@@ -165,7 +175,7 @@ pub mod engine {
 
     fn move_active(game: &mut Game, dir: playfield::Dir) -> bool {
         if game.playfield.move_tetro(&mut game.active_tetro, dir) {
-            game.view_outdated = true;
+            game.playfield_updated = true;
             true
         } else {
             false
@@ -174,7 +184,7 @@ pub mod engine {
 
     fn turn_active(game: &mut Game) -> bool {
         if game.playfield.turn_tetro(&mut game.active_tetro) {
-            game.view_outdated = true;
+            game.playfield_updated = true;
             true
         } else {
             false
@@ -255,6 +265,7 @@ pub mod engine {
                     } else {
                         game.state = create_new_tetro(game);
                     }
+                    game.playfield_updated = true;
                 }
             },
             State::End => {
