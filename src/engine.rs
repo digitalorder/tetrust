@@ -81,7 +81,19 @@ pub mod engine {
         fn default() -> Self {UpdatableView{updated: true}}
     }
 
-    type StaticUpdatableView = UpdatableView;
+    struct StaticUpdatableView {
+        view: UpdatableView,
+    }
+
+    impl StaticUpdatableView {
+        fn show(self: &mut Self, view: &impl View) {
+            self.view.show(view, &ShowArgs::StaticArgs{});
+        }
+    }
+
+    impl Default for StaticUpdatableView {
+        fn default() -> Self {StaticUpdatableView{view: UpdatableView::default()}}
+    }
 
     struct Score {
         view: UpdatableView,
@@ -131,31 +143,109 @@ pub mod engine {
         }
     }
 
-    pub struct Game {
+    struct PlayfieldUpdatableView {
+        view: UpdatableView,
         playfield: playfield::Playfield,
-        state: State,
+        no_ghost: bool,
         active_tetro: playfield::FieldTetromino,
+    }
+
+    impl PlayfieldUpdatableView {
+        fn move_active(self: &mut Self, dir: playfield::Dir) -> bool {
+            if self.playfield.move_tetro(&mut self.active_tetro, dir) {
+                self.view.update();
+                true
+            } else {
+                false
+            }
+        }
+
+        fn turn_active(self: &mut Self) -> bool {
+            if self.playfield.turn_tetro(&mut self.active_tetro) {
+                self.view.update();
+                true
+            } else {
+                false
+            }
+        }
+
+        fn place_active(self: &mut Self) {
+            let _ = self.playfield.place(&self.active_tetro.tetro, self.active_tetro.coords);
+            self.active_tetro.tetro.shape = figures::Shape::NoShape;
+            self.view.update();
+        }
+
+        fn new_active(self: &mut Self, tetro: &figures::Tetromino) -> bool{
+            self.active_tetro = playfield::FieldTetromino{
+                coords: playfield::Coords{row: playfield::HEIGHT - 1,
+                                          col: playfield::WIDTH / 2 - 2},
+                tetro: *tetro
+            };
+            self.view.update();
+            self.playfield.can_place(&self.active_tetro.tetro, &self.active_tetro.coords)
+        }
+
+        fn remove_filled(self: &mut Self) -> u8 {
+            let mut result = 0;
+
+            for r in (0..playfield::HEIGHT).rev() {
+                if self.playfield.row_filled(r) {
+                    result += 1;
+                    self.playfield.delete_row(r);
+                    self.view.update();
+                }
+            }
+
+            result
+        }
+
+        fn show(self: &mut Self, view: &impl View) {
+            let ghost_tetro = if self.no_ghost {
+                playfield::FieldTetromino::default()
+            } else {
+                let mut ghost_tetro = self.active_tetro;
+                while self.playfield.move_tetro(&mut ghost_tetro, playfield::Dir::Down) {};
+                ghost_tetro
+            };
+
+            self.view.show(view, &ShowArgs::PlayfieldArgs{
+                                    playfield: &self.playfield,
+                                    active_tetro: &self.active_tetro,
+                                    ghost_tetro: &ghost_tetro
+                                 });
+        }
+
+        fn new(playfield: playfield::Playfield, no_ghost: bool) -> Self {
+            PlayfieldUpdatableView{
+                playfield: playfield,
+                view: UpdatableView::default(),
+                no_ghost: no_ghost,
+                active_tetro: playfield::FieldTetromino::default(),
+            }
+        }
+    }
+
+    pub struct Game {
+        playfield: PlayfieldUpdatableView,
+        state: State,
         next_updated: bool,
         next_tetro: figures::Tetromino,
         static_view: StaticUpdatableView,
         score: Score,
         frame_counter: i8,
         playfield_updated: bool,
-        no_ghost: bool,
     }
 
     pub fn new_game(config: Config, playfield: playfield::Playfield) -> Game {
         Game {
-            playfield: playfield,
+            playfield: PlayfieldUpdatableView::new(playfield, config.no_ghost),
             static_view: StaticUpdatableView::default(),
             score: Score::new(config.level as i8),
             state: State::Dropped,
-            active_tetro: playfield::FieldTetromino::default(),
             next_updated: true,
             next_tetro: figures::Tetromino::new_random(),
             frame_counter: 0,
             playfield_updated: true,
-            no_ghost: config.no_ghost,
         }
     }
 
@@ -165,68 +255,23 @@ pub mod engine {
 
     pub fn draw_frame(game: &mut Game, view: &impl View) {
         game.score.show(view);
-        game.static_view.show(view, &ShowArgs::StaticArgs{});
+        game.static_view.show(view);
         if game.next_updated {
             game.next_updated = false;
             view.show_next(&mut game.next_tetro);
         }
-        if game.playfield_updated {
-            game.playfield_updated = false;
-            let ghost_tetro = if game.no_ghost {
-                playfield::FieldTetromino::default()
-            } else {
-                let mut ghost_tetro = game.active_tetro;
-                while game.playfield.move_tetro(&mut ghost_tetro, playfield::Dir::Down) {};
-                ghost_tetro
-            };
-            view.show_playfield(&game.playfield, &game.active_tetro, &ghost_tetro);
-        }
-    }
-
-    fn remove_filled(playfield: &mut playfield::Playfield) -> u8 {
-        let mut result = 0;
-
-        for r in (0..playfield::HEIGHT).rev() {
-            if playfield.row_filled(r) {
-                result += 1;
-                playfield.delete_row(r);
-            }
-        }
-
-        result
+        game.playfield.show(view);
     }
 
     fn create_new_tetro(game: &mut Game) -> State {
         game.next_updated = true;
-        game.active_tetro = playfield::FieldTetromino{
-            coords: playfield::Coords{row: playfield::HEIGHT - 1,
-                                      col: playfield::WIDTH / 2 - 2},
-            tetro: game.next_tetro
-        };
+        let no_intersect = game.playfield.new_active(&game.next_tetro);
         game.next_tetro = figures::Tetromino::new_random();
 
-        if game.playfield.can_place(&game.active_tetro.tetro, &game.active_tetro.coords) {
+        if no_intersect {
             State::ActiveTetro
         } else {
             State::End
-        }
-    }
-
-    fn move_active(game: &mut Game, dir: playfield::Dir) -> bool {
-        if game.playfield.move_tetro(&mut game.active_tetro, dir) {
-            game.playfield_updated = true;
-            true
-        } else {
-            false
-        }
-    }
-
-    fn turn_active(game: &mut Game) -> bool {
-        if game.playfield.turn_tetro(&mut game.active_tetro) {
-            game.playfield_updated = true;
-            true
-        } else {
-            false
         }
     }
 
@@ -253,12 +298,13 @@ pub mod engine {
     }
 
     fn move_down(game: &mut Game) -> State {
-        if !move_active(game, playfield::Dir::Down) {
-            let _ = game.playfield.place(&game.active_tetro.tetro, game.active_tetro.coords);
-            game.active_tetro.tetro.shape = figures::Shape::NoShape;
-            State::Dropped
-        } else {
+        let move_success = game.playfield.move_active(playfield::Dir::Down);
+
+        if move_success {
             State::ActiveTetro
+        } else {
+            game.playfield.place_active();
+            State::Dropped
         }
     }
 
@@ -272,13 +318,13 @@ pub mod engine {
                 } else if event == Event::KeyDown {
                     game.state = move_down(game);
                 } else if event == Event::KeyLeft {
-                    move_active(game, playfield::Dir::Left);
+                    game.playfield.move_active(playfield::Dir::Left);
                 } else if event == Event::KeyRight {
-                    move_active(game, playfield::Dir::Right);
+                    game.playfield.move_active(playfield::Dir::Right);
                 } else if event == Event::KeyTurn {
-                    turn_active(game);
+                    game.playfield.turn_active();
                 } else if event == Event::KeyDrop {
-                    while move_active(game, playfield::Dir::Down) {
+                    while game.playfield.move_active(playfield::Dir::Down) {
                         /* reset frame counter only if there was a drop,
                          * otherwise holding drop key would effectively
                          * freeze game
@@ -294,7 +340,7 @@ pub mod engine {
             },
             State::Dropped => {
                 if event == Event::Timeout {
-                    let removed = remove_filled(&mut game.playfield);
+                    let removed = game.playfield.remove_filled();
                     game.score.update(removed);
                     game.state = create_new_tetro(game);
                     game.playfield_updated = true;

@@ -5,22 +5,20 @@ use termion::raw::IntoRawMode;
 extern crate termion;
 
 pub type Row = [char; WIDTH as usize];
-pub enum ShowArgs {
+pub enum ShowArgs<'a> {
     StaticArgs,
+    PlayfieldArgs{playfield: &'a Playfield, active_tetro: &'a FieldTetromino, ghost_tetro: &'a FieldTetromino},
     ScoreArgs{level: i8, score: u32, lines: u32},
 }
 
-pub trait PlayfieldView {
-    fn show_playfield(self: &Self, playfield: &Playfield, active_tetro: &FieldTetromino, ghost_tetro: &FieldTetromino);
-}
 pub trait NewView {
     fn show_subview(self: &Self, args: &ShowArgs);
 }
 pub trait NextView {
     fn show_next(self: &Self, tetro: &mut Tetromino);
 }
-pub trait View: PlayfieldView + NewView + NextView {}
-impl<T> View for T where T: PlayfieldView + NewView + NextView {}
+pub trait View: NewView + NextView {}
+impl<T> View for T where T: NewView + NextView {}
 
 pub struct ConsoleView {
 }
@@ -28,23 +26,6 @@ const NEXT_TETRO_BASE_ROW: i8 = 4;
 const NEXT_TETRO_BASE_COL: i8 = 26;
 const SCORE_BASE_ROW: u16 = 2;
 const SCORE_BASE_COL: u16 = 26;
-
-impl PlayfieldView for ConsoleView {
-    fn show_playfield(&self, playfield: &Playfield, active_tetro: &FieldTetromino, ghost_tetro: &FieldTetromino) {
-        for row in 0..HEIGHT {
-            print!("{}", termion::cursor::Goto(2, 3 + (row as u16)));
-            for col in 0..WIDTH {
-                let shape_at = playfield.shape_at(&Coords{row: HEIGHT - row - 1, col: col as i8}, active_tetro, ghost_tetro);
-                let color = convert_to_color(shape_at);
-                print!("{}  {}", termion::color::Bg(color), termion::color::Bg(termion::color::Black));
-            }
-        }
-        print!("{}", termion::color::Bg(termion::color::Black));
-        print!("{}", termion::cursor::Goto(1, HEIGHT as u16 + 4));
-        let mut stdout = stdout().into_raw_mode().unwrap();
-        stdout.flush().unwrap();
-    }
-}
 
 impl NewView for ConsoleView {
     fn show_subview(self: &Self, args: &ShowArgs) {
@@ -58,10 +39,22 @@ impl NewView for ConsoleView {
                        termion::cursor::Goto(1, 1));
                 draw_rectangle(&Coords{row: 2, col: 1}, HEIGHT, WIDTH * 2);
                 draw_rectangle(&Coords{row: NEXT_TETRO_BASE_ROW, col: NEXT_TETRO_BASE_COL}, LAYOUT_HEIGHT, LAYOUT_WIDTH * 2);
-                let mut stdout = stdout().into_raw_mode().unwrap();
-                stdout.flush().unwrap();
             },
+            ShowArgs::PlayfieldArgs{playfield, active_tetro, ghost_tetro} => {
+                for row in 0..HEIGHT {
+                    print!("{}", termion::cursor::Goto(2, 3 + (row as u16)));
+                    for col in 0..WIDTH {
+                        let shape_at = playfield.shape_at(&Coords{row: HEIGHT - row - 1, col: col as i8}, active_tetro, ghost_tetro);
+                        let color = convert_to_color(shape_at);
+                        print!("{}  {}", termion::color::Bg(color), termion::color::Bg(termion::color::Black));
+                    }
+                }
+                print!("{}", termion::color::Bg(termion::color::Black));
+                print!("{}", termion::cursor::Goto(1, HEIGHT as u16 + 4));
+            }
         };
+        let mut stdout = stdout().into_raw_mode().unwrap();
+        stdout.flush().unwrap();
     }
 }
 
