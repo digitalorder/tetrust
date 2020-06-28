@@ -13,9 +13,10 @@ const SCORE_BASE_ROW: u16 = 2;
 const SCORE_BASE_COL: u16 = 26;
 
 pub trait View {
-    fn show_playfield(&self, playfield: &Playfield, active_tetro: &FieldTetromino, ghost_tetro: &FieldTetromino);
-    fn show_static(&self, level: i8, score: u32, lines: u32);
+    fn show_playfield(self: &Self, playfield: &Playfield, active_tetro: &FieldTetromino, ghost_tetro: &FieldTetromino);
+    fn show_static(self: &Self);
     fn show_next(self: &Self, tetro: &mut Tetromino);
+    fn show_score(self: &Self, level: i8, score: u32, lines: u32);
     /* TODO: add rows iterator */
 }
 
@@ -35,13 +36,16 @@ impl View for ConsoleView {
         stdout.flush().unwrap();
     }
 
-    fn show_static(self: &Self, level: i8, score: u32, lines: u32) {
+    fn show_score(self: &Self, level: i8, score: u32, lines: u32) {
+        print!("{}Level: {} Score: {} Lines: {}",
+        termion::cursor::Goto(SCORE_BASE_COL, SCORE_BASE_ROW), level, score, lines);
+    }
+
+    fn show_static(self: &Self) {
         print!("{}Move: ⬅️ ⬇️ ➡️  Rotate: ⬆️  Drop: Spacebar. Hold: h. Exit: q\n\r",
                termion::cursor::Goto(1, 1));
         draw_rectangle(&Coords{row: 2, col: 1}, HEIGHT, WIDTH * 2);
         draw_rectangle(&Coords{row: NEXT_TETRO_BASE_ROW, col: NEXT_TETRO_BASE_COL}, LAYOUT_HEIGHT, LAYOUT_WIDTH * 2);
-        print!("{}Level: {} Score: {} Lines: {}",
-               termion::cursor::Goto(SCORE_BASE_COL, SCORE_BASE_ROW), level, score, lines);
         let mut stdout = stdout().into_raw_mode().unwrap();
         stdout.flush().unwrap();
     }

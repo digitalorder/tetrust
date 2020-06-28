@@ -69,6 +69,7 @@ pub mod engine {
         lines_cleared: u32,
         level: i8,
         score: u32,
+        score_updated: bool,
         frame_counter: i8,
         view_outdated: bool,
         no_ghost: bool,
@@ -84,6 +85,7 @@ pub mod engine {
             lines_cleared: 0,
             level: if config.level < 29 { config.level as i8 } else { 29 },
             score: 0,
+            score_updated: true,
             frame_counter: 0,
             view_outdated: true,
             no_ghost: config.no_ghost,
@@ -95,8 +97,12 @@ pub mod engine {
     }
 
     pub fn draw_frame(game: &mut Game) {
+        if game.score_updated {
+            game.score_updated = false;
+            game.view.show_score(game.level, game.score, game.lines_cleared);
+        };
         if game.view_outdated {
-            game.view.show_static(game.level, game.score, game.lines_cleared);
+            game.view.show_static();
             game.view.show_next(&mut game.next_tetro);
             game.view_outdated = false;
             let ghost_tetro = if game.no_ghost {
@@ -245,6 +251,7 @@ pub mod engine {
 
                     if removed > 0 {
                         game.score += score_increment(game.level, removed);
+                        game.score_updated = true;
                     } else {
                         game.state = create_new_tetro(game);
                     }
