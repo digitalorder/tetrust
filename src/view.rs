@@ -5,21 +5,22 @@ use termion::raw::IntoRawMode;
 extern crate termion;
 
 pub type Row = [char; WIDTH as usize];
+pub enum ShowArgs {
+    StaticArgs,
+    ScoreArgs{level: i8, score: u32, lines: u32},
+}
+
 pub trait PlayfieldView {
     fn show_playfield(self: &Self, playfield: &Playfield, active_tetro: &FieldTetromino, ghost_tetro: &FieldTetromino);
 }
-pub trait StaticView {
-    fn show_static(self: &Self);
+pub trait NewView {
+    fn show_subview(self: &Self, args: &ShowArgs);
 }
 pub trait NextView {
     fn show_next(self: &Self, tetro: &mut Tetromino);
 }
-pub trait ScoreView {
-    fn show_score(self: &Self, level: i8, score: u32, lines: u32);
-}
-
-pub trait View: PlayfieldView + StaticView + NextView + ScoreView {}
-impl<T> View for T where T: PlayfieldView + StaticView + NextView + ScoreView {}
+pub trait View: PlayfieldView + NewView + NextView {}
+impl<T> View for T where T: PlayfieldView + NewView + NextView {}
 
 pub struct ConsoleView {
 }
@@ -45,21 +46,22 @@ impl PlayfieldView for ConsoleView {
     }
 }
 
-impl ScoreView for ConsoleView {
-    fn show_score(self: &Self, level: i8, score: u32, lines: u32) {
-        print!("{}Level: {} Score: {} Lines: {}",
-        termion::cursor::Goto(SCORE_BASE_COL, SCORE_BASE_ROW), level, score, lines);
-    }
-}
-
-impl StaticView for ConsoleView {
-    fn show_static(self: &Self) {
-        print!("{}Move: ⬅️ ⬇️ ➡️  Rotate: ⬆️  Drop: Spacebar. Hold: h. Exit: q\n\r",
-               termion::cursor::Goto(1, 1));
-        draw_rectangle(&Coords{row: 2, col: 1}, HEIGHT, WIDTH * 2);
-        draw_rectangle(&Coords{row: NEXT_TETRO_BASE_ROW, col: NEXT_TETRO_BASE_COL}, LAYOUT_HEIGHT, LAYOUT_WIDTH * 2);
-        let mut stdout = stdout().into_raw_mode().unwrap();
-        stdout.flush().unwrap();
+impl NewView for ConsoleView {
+    fn show_subview(self: &Self, args: &ShowArgs) {
+        match args {
+            ShowArgs::ScoreArgs{level, lines, score} => {
+                print!("{}Level: {} Score: {} Lines: {}",
+                       termion::cursor::Goto(SCORE_BASE_COL, SCORE_BASE_ROW), level, score, lines)
+            },
+            ShowArgs::StaticArgs => {
+                print!("{}Move: ⬅️ ⬇️ ➡️  Rotate: ⬆️  Drop: Spacebar. Hold: h. Exit: q\n\r",
+                       termion::cursor::Goto(1, 1));
+                draw_rectangle(&Coords{row: 2, col: 1}, HEIGHT, WIDTH * 2);
+                draw_rectangle(&Coords{row: NEXT_TETRO_BASE_ROW, col: NEXT_TETRO_BASE_COL}, LAYOUT_HEIGHT, LAYOUT_WIDTH * 2);
+                let mut stdout = stdout().into_raw_mode().unwrap();
+                stdout.flush().unwrap();
+            },
+        };
     }
 }
 

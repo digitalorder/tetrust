@@ -1,5 +1,5 @@
 pub mod engine {
-    use crate::view::{View};
+    use crate::view::{View, ShowArgs};
     use crate::playfield as playfield;
     use crate::figures::figures as figures;
     use std::fmt;
@@ -60,17 +60,85 @@ pub mod engine {
         }
     }
 
+    struct UpdatableView {
+        updated: bool,
+    }
+
+    impl UpdatableView {
+        fn update(self: &mut Self) {
+            self.updated = true;
+        }
+
+        fn show(self: &mut Self, view: &impl View, args: &ShowArgs) {
+            if self.updated {
+                view.show_subview(args);
+            }
+            self.updated = false;
+        }
+    }
+
+    impl Default for UpdatableView {
+        fn default() -> Self {UpdatableView{updated: true}}
+    }
+
+    type StaticUpdatableView = UpdatableView;
+
+    struct Score {
+        view: UpdatableView,
+        level: i8,
+        score: u32,
+        lines_cleared: u32,
+    }
+
+    impl Score {
+        fn score_increment(level: i8, cleared_lines: u8) -> u32 {
+            /* Level 1 line         2 lines         3 lines         4 lines
+             * 0     40             100             300             1200
+             * 1     80             200             600             2400
+             * 2     120            300             900             3600
+             * .......
+             * n     40 * (n + 1)   100 * (n + 1)   300 * (n + 1)   1200 * (n + 1)
+             */
+            let line_coeff: u32 = match cleared_lines {
+                0 => 0,
+                1 => 40,
+                2 => 100,
+                3 => 300,
+                _ => 1200,
+            };
+
+            line_coeff * (level as u32 + 1)
+        }
+
+        fn update(self: &mut Self, lines_cleared: u8) {
+            self.lines_cleared += lines_cleared as u32;
+            self.level = cmp::max(self.level, (self.lines_cleared / 10) as i8);
+            self.score += Score::score_increment(self.level, lines_cleared);
+            self.view.update();
+        }
+
+        fn show(self: &mut Self, view: &impl View) {
+            self.view.show(view, &ShowArgs::ScoreArgs{level: self.level, lines: self.lines_cleared, score: self.score});
+        }
+
+        fn new(level: i8) -> Self {
+            Score {
+                view: UpdatableView::default(),
+                level: if level < 29 { level as i8 } else { 29 },
+                score: 0,
+                lines_cleared: 0
+            }
+        }
+    }
+
     pub struct Game {
         playfield: playfield::Playfield,
         state: State,
         active_tetro: playfield::FieldTetromino,
         next_updated: bool,
         next_tetro: figures::Tetromino,
-        lines_cleared: u32,
-        level: i8,
-        static_updated: bool,
-        score: u32,
-        score_updated: bool,
+        static_view: StaticUpdatableView,
+        score: Score,
         frame_counter: i8,
         playfield_updated: bool,
         no_ghost: bool,
@@ -79,15 +147,12 @@ pub mod engine {
     pub fn new_game(config: Config, playfield: playfield::Playfield) -> Game {
         Game {
             playfield: playfield,
+            static_view: StaticUpdatableView::default(),
+            score: Score::new(config.level as i8),
             state: State::Dropped,
             active_tetro: playfield::FieldTetromino::default(),
             next_updated: true,
             next_tetro: figures::Tetromino::new_random(),
-            lines_cleared: 0,
-            level: if config.level < 29 { config.level as i8 } else { 29 },
-            static_updated: true,
-            score: 0,
-            score_updated: true,
             frame_counter: 0,
             playfield_updated: true,
             no_ghost: config.no_ghost,
@@ -99,14 +164,8 @@ pub mod engine {
     }
 
     pub fn draw_frame(game: &mut Game, view: &impl View) {
-        if game.score_updated {
-            game.score_updated = false;
-            view.show_score(game.level, game.score, game.lines_cleared);
-        };
-        if game.static_updated {
-            game.static_updated = false;
-            view.show_static();
-        }
+        game.score.show(view);
+        game.static_view.show(view, &ShowArgs::StaticArgs{});
         if game.next_updated {
             game.next_updated = false;
             view.show_next(&mut game.next_tetro);
@@ -153,24 +212,6 @@ pub mod engine {
         }
     }
 
-    fn score_increment(level: i8, cleared_lines: u8) -> u32 {
-        /* Level 1 line         2 lines         3 lines         4 lines
-         * 0     40             100             300             1200
-         * 1     80             200             600             2400
-         * 2     120            300             900             3600
-         * .......
-         * n     40 * (n + 1)   100 * (n + 1)   300 * (n + 1)   1200 * (n + 1)
-         */
-        let line_coeff: u32 = match cleared_lines {
-            1 => 40,
-            2 => 100,
-            3 => 300,
-            _ => 1200,
-        };
-
-        line_coeff * (level as u32 + 1)
-    }
-
     fn move_active(game: &mut Game, dir: playfield::Dir) -> bool {
         if game.playfield.move_tetro(&mut game.active_tetro, dir) {
             game.playfield_updated = true;
@@ -203,7 +244,7 @@ pub mod engine {
 
     fn inc_frame_counter(game: &mut Game) -> bool {
         game.frame_counter += 1;
-        if game.frame_counter >= max_frame_count(game.level) {
+        if game.frame_counter >= max_frame_count(game.score.level) {
             game.frame_counter = 0;
             true
         } else {
@@ -242,7 +283,7 @@ pub mod engine {
                          * otherwise holding drop key would effectively
                          * freeze game
                          */
-                        game.frame_counter = max_frame_count(game.level) - 30;
+                        game.frame_counter = max_frame_count(game.score.level) - 30;
                     };
                 } else if event == Event::KeyHold {
                     game.frame_counter = 0;
@@ -254,15 +295,8 @@ pub mod engine {
             State::Dropped => {
                 if event == Event::Timeout {
                     let removed = remove_filled(&mut game.playfield);
-                    game.lines_cleared += removed as u32;
-                    game.level = cmp::max(game.level, (game.lines_cleared / 10) as i8);
-
-                    if removed > 0 {
-                        game.score += score_increment(game.level, removed);
-                        game.score_updated = true;
-                    } else {
-                        game.state = create_new_tetro(game);
-                    }
+                    game.score.update(removed);
+                    game.state = create_new_tetro(game);
                     game.playfield_updated = true;
                 }
             },
