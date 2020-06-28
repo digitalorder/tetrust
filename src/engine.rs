@@ -225,27 +225,43 @@ pub mod engine {
         }
     }
 
+    struct NextView {
+        view: UpdatableView,
+        next_tetro: figures::Tetromino,
+    }
+
+    impl NextView {
+        fn new_tetro(self: &mut Self) {
+            self.next_tetro = figures::Tetromino::new_random();
+            self.view.update();
+        }
+
+        fn show(self: &mut Self, view: &impl View) {
+            self.view.show(view, &ShowArgs::NextTetroArgs{tetro: self.next_tetro});
+        }
+
+        fn new() -> Self {
+            NextView{view: UpdatableView::default(), next_tetro: figures::Tetromino::new_random()}
+        }
+    }
+
     pub struct Game {
         playfield: PlayfieldUpdatableView,
         state: State,
-        next_updated: bool,
-        next_tetro: figures::Tetromino,
+        next_tetro_view: NextView,
         static_view: StaticUpdatableView,
         score: Score,
         frame_counter: i8,
-        playfield_updated: bool,
     }
 
     pub fn new_game(config: Config, playfield: playfield::Playfield) -> Game {
         Game {
             playfield: PlayfieldUpdatableView::new(playfield, config.no_ghost),
             static_view: StaticUpdatableView::default(),
+            next_tetro_view: NextView::new(),
             score: Score::new(config.level as i8),
             state: State::Dropped,
-            next_updated: true,
-            next_tetro: figures::Tetromino::new_random(),
             frame_counter: 0,
-            playfield_updated: true,
         }
     }
 
@@ -256,18 +272,13 @@ pub mod engine {
     pub fn draw_frame(game: &mut Game, view: &impl View) {
         game.score.show(view);
         game.static_view.show(view);
-        if game.next_updated {
-            game.next_updated = false;
-            view.show_next(&mut game.next_tetro);
-        }
+        game.next_tetro_view.show(view);
         game.playfield.show(view);
     }
 
     fn create_new_tetro(game: &mut Game) -> State {
-        game.next_updated = true;
-        let no_intersect = game.playfield.new_active(&game.next_tetro);
-        game.next_tetro = figures::Tetromino::new_random();
-
+        let no_intersect = game.playfield.new_active(&game.next_tetro_view.next_tetro);
+        game.next_tetro_view.new_tetro();
         if no_intersect {
             State::ActiveTetro
         } else {
@@ -343,7 +354,6 @@ pub mod engine {
                     let removed = game.playfield.remove_filled();
                     game.score.update(removed);
                     game.state = create_new_tetro(game);
-                    game.playfield_updated = true;
                 }
             },
             State::End => {

@@ -9,16 +9,12 @@ pub enum ShowArgs<'a> {
     StaticArgs,
     PlayfieldArgs{playfield: &'a Playfield, active_tetro: &'a FieldTetromino, ghost_tetro: &'a FieldTetromino},
     ScoreArgs{level: i8, score: u32, lines: u32},
+    NextTetroArgs{tetro: Tetromino},
 }
 
-pub trait NewView {
+pub trait View {
     fn show_subview(self: &Self, args: &ShowArgs);
 }
-pub trait NextView {
-    fn show_next(self: &Self, tetro: &mut Tetromino);
-}
-pub trait View: NewView + NextView {}
-impl<T> View for T where T: NewView + NextView {}
 
 pub struct ConsoleView {
 }
@@ -27,7 +23,7 @@ const NEXT_TETRO_BASE_COL: i8 = 26;
 const SCORE_BASE_ROW: u16 = 2;
 const SCORE_BASE_COL: u16 = 26;
 
-impl NewView for ConsoleView {
+impl View for ConsoleView {
     fn show_subview(self: &Self, args: &ShowArgs) {
         match args {
             ShowArgs::ScoreArgs{level, lines, score} => {
@@ -51,21 +47,16 @@ impl NewView for ConsoleView {
                 }
                 print!("{}", termion::color::Bg(termion::color::Black));
                 print!("{}", termion::cursor::Goto(1, HEIGHT as u16 + 4));
+            },
+            ShowArgs::NextTetroArgs{tetro} => {
+                for (coords, shape) in *tetro {
+                    let color = convert_to_color(ShapeAt{shape: shape, shape_at_type: ShapeAtType::Static});
+                    print!("{}{}  {}", termion::cursor::Goto((NEXT_TETRO_BASE_COL + 1 + coords.col * 2) as u16,
+                                                             (NEXT_TETRO_BASE_ROW + 1 + coords.row) as u16),
+                                       termion::color::Bg(color), termion::color::Bg(termion::color::Black));
+                }
             }
         };
-        let mut stdout = stdout().into_raw_mode().unwrap();
-        stdout.flush().unwrap();
-    }
-}
-
-impl NextView for ConsoleView {
-    fn show_next(self: &Self, tetro: &mut Tetromino) {
-        for (coords, shape) in tetro {
-            let color = convert_to_color(ShapeAt{shape: shape, shape_at_type: ShapeAtType::Static});
-            print!("{}{}  {}", termion::cursor::Goto((NEXT_TETRO_BASE_COL + 1 + coords.col * 2) as u16,
-                                                     (NEXT_TETRO_BASE_ROW + 1 + coords.row) as u16),
-                               termion::color::Bg(color), termion::color::Bg(termion::color::Black));
-        }
         let mut stdout = stdout().into_raw_mode().unwrap();
         stdout.flush().unwrap();
     }
