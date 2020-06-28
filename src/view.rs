@@ -49,7 +49,7 @@ impl View for ConsoleView {
                 print!("{}", termion::cursor::Goto(1, HEIGHT as u16 + 4));
             },
             ShowArgs::NextTetroArgs{tetro} => {
-                for (coords, shape) in *tetro {
+                for (coords, shape) in tetro.clone() {
                     let color = convert_to_color(ShapeAt{shape: shape, shape_at_type: ShapeAtType::Static});
                     print!("{}{}  {}", termion::cursor::Goto((NEXT_TETRO_BASE_COL + 1 + coords.col * 2) as u16,
                                                              (NEXT_TETRO_BASE_ROW + 1 + coords.row) as u16),

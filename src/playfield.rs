@@ -18,7 +18,7 @@ impl Default for Storage {
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Clone)]
 pub struct FieldTetromino {
     pub coords: Coords,
     pub tetro: figures::Tetromino,
@@ -146,14 +146,14 @@ impl Playfield {
             };
 
             if inside_active && active_tetro.tetro.shape_at(&active_coords) != figures::Shape::NoShape {
-                return ShapeAt{shape: active_tetro.tetro.shape, shape_at_type: ShapeAtType::Active};
+                return ShapeAt{shape: active_tetro.tetro.shape.clone(), shape_at_type: ShapeAtType::Active};
             }
 
             if inside_ghost && ghost_tetro.tetro.shape_at(&ghost_coords) != figures::Shape::NoShape {
-                return ShapeAt{shape: active_tetro.tetro.shape, shape_at_type: ShapeAtType::Ghost};
+                return ShapeAt{shape: active_tetro.tetro.shape.clone(), shape_at_type: ShapeAtType::Ghost};
             }
 
-            return ShapeAt{shape: self.storage.playfield[coords.row as usize][coords.col as usize], shape_at_type: ShapeAtType::Static}
+            return ShapeAt{shape: self.storage.playfield[coords.row as usize][coords.col as usize].clone(), shape_at_type: ShapeAtType::Static}
         }
     }
 
@@ -182,7 +182,7 @@ impl Playfield {
             return false;
         }
 
-        let mut turned_tetro = *tetro;
+        let mut turned_tetro = tetro.clone();
         figures::rotate(&mut turned_tetro.tetro);
 
         if self.can_place(&turned_tetro.tetro, &turned_tetro.coords) {
@@ -200,7 +200,7 @@ impl Playfield {
 
         for r in row..TOTAL_HEIGHT-1 {
             for c in 0..(WIDTH as usize) {
-                self.storage.playfield[r as usize][c] = self.storage.playfield[(r + 1) as usize][c];
+                self.storage.playfield[r as usize][c] = self.storage.playfield[(r + 1) as usize][c].clone();
             }
         }
     }
@@ -248,7 +248,7 @@ mod tests {
         let mut playfield: Playfield = Playfield::new(Default::default());
         let tetro = figures::Tetromino::new(figures::Shape::OShape);
         let active_tetro = FieldTetromino::default();
-        let ghost_tetro = active_tetro;
+        let ghost_tetro = active_tetro.clone();
         let place_coords = Coords{col: 5, row: 10};
 
         let place_result = playfield.place(&tetro, place_coords);
@@ -297,7 +297,7 @@ mod tests {
             tetro: figures::Tetromino::new(figures::Shape::OShape),
             coords: create_coords,
         };
-        let ghost_tetro = active_tetro;
+        let ghost_tetro = active_tetro.clone();
 
         // check for every position that shape is either OShape or None
         assert_eq!(playfield.shape_at(&Coords{..create_coords}, &active_tetro, &ghost_tetro),

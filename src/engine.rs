@@ -10,7 +10,7 @@ pub mod engine {
         pub level: u8,
     }
 
-    #[derive(Copy, Clone, PartialEq)]
+    #[derive(PartialEq)]
     pub enum State {
         Dropped,
         ActiveTetro,
@@ -31,7 +31,7 @@ pub mod engine {
         }
     }
 
-    #[derive(Copy, Clone, PartialEq)]
+    #[derive(Clone, PartialEq)]
     pub enum Event {
         Timeout,
         KeyLeft,
@@ -179,7 +179,7 @@ pub mod engine {
             self.active_tetro = playfield::FieldTetromino{
                 coords: playfield::Coords{row: playfield::HEIGHT - 1,
                                           col: playfield::WIDTH / 2 - 2},
-                tetro: *tetro
+                tetro: tetro.clone(),
             };
             self.view.update();
             self.playfield.can_place(&self.active_tetro.tetro, &self.active_tetro.coords)
@@ -203,7 +203,7 @@ pub mod engine {
             let ghost_tetro = if self.no_ghost {
                 playfield::FieldTetromino::default()
             } else {
-                let mut ghost_tetro = self.active_tetro;
+                let mut ghost_tetro = self.active_tetro.clone();
                 while self.playfield.move_tetro(&mut ghost_tetro, playfield::Dir::Down) {};
                 ghost_tetro
             };
@@ -237,7 +237,7 @@ pub mod engine {
         }
 
         fn show(self: &mut Self, view: &impl View) {
-            self.view.show(view, &ShowArgs::NextTetroArgs{tetro: self.next_tetro});
+            self.view.show(view, &ShowArgs::NextTetroArgs{tetro: self.next_tetro.clone()});
         }
 
         fn new() -> Self {

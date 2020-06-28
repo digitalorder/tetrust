@@ -51,7 +51,7 @@ fn do_game(no_ghost: bool, level: u8) {
     while !engine::is_finished(&game) {
         let view = view::ConsoleView{};
         let event = rx.recv().unwrap();
-        engine::calculate_frame(&mut game, event);
+        engine::calculate_frame(&mut game, event.clone());
         engine::draw_frame(&mut game, &view);
 
         if event == engine::Event::KeyExit {

@@ -3,7 +3,7 @@ pub mod figures {
     use rand::prelude::*;
     use crate::playfield::Coords;
 
-    #[derive(Copy, Clone, PartialEq, Debug)]
+    #[derive(Clone, PartialEq, Debug)]
     pub enum Shape {
         NoShape,
         OShape,
@@ -36,7 +36,7 @@ pub mod figures {
     pub const LAYOUT_HEIGHT: i8 = 4;
     pub type Layout = [[u8; LAYOUT_WIDTH as usize]; LAYOUT_HEIGHT as usize];
 
-    #[derive(Copy, Clone)]
+    #[derive(Clone)]
     pub struct Tetromino {
         pub shape: Shape,
         layout: Layout,
@@ -133,7 +133,7 @@ pub mod figures {
         pub fn shape_at(self: &Self, coords: &Coords) -> Shape {
             match self.layout[coords.row as usize][coords.col as usize] {
                 0 => Shape::NoShape,
-                _ => self.shape,
+                _ => self.shape.clone(),
             }
         }
     }
