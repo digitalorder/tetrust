@@ -5,6 +5,22 @@ use termion::raw::IntoRawMode;
 extern crate termion;
 
 pub type Row = [char; WIDTH as usize];
+pub trait PlayfieldView {
+    fn show_playfield(self: &Self, playfield: &Playfield, active_tetro: &FieldTetromino, ghost_tetro: &FieldTetromino);
+}
+pub trait StaticView {
+    fn show_static(self: &Self);
+}
+pub trait NextView {
+    fn show_next(self: &Self, tetro: &mut Tetromino);
+}
+pub trait ScoreView {
+    fn show_score(self: &Self, level: i8, score: u32, lines: u32);
+}
+
+pub trait View: PlayfieldView + StaticView + NextView + ScoreView {}
+impl<T> View for T where T: PlayfieldView + StaticView + NextView + ScoreView {}
+
 pub struct ConsoleView {
 }
 const NEXT_TETRO_BASE_ROW: i8 = 4;
@@ -12,15 +28,7 @@ const NEXT_TETRO_BASE_COL: i8 = 26;
 const SCORE_BASE_ROW: u16 = 2;
 const SCORE_BASE_COL: u16 = 26;
 
-pub trait View {
-    fn show_playfield(self: &Self, playfield: &Playfield, active_tetro: &FieldTetromino, ghost_tetro: &FieldTetromino);
-    fn show_static(self: &Self);
-    fn show_next(self: &Self, tetro: &mut Tetromino);
-    fn show_score(self: &Self, level: i8, score: u32, lines: u32);
-    /* TODO: add rows iterator */
-}
-
-impl View for ConsoleView {
+impl PlayfieldView for ConsoleView {
     fn show_playfield(&self, playfield: &Playfield, active_tetro: &FieldTetromino, ghost_tetro: &FieldTetromino) {
         for row in 0..HEIGHT {
             print!("{}", termion::cursor::Goto(2, 3 + (row as u16)));
@@ -35,12 +43,16 @@ impl View for ConsoleView {
         let mut stdout = stdout().into_raw_mode().unwrap();
         stdout.flush().unwrap();
     }
+}
 
+impl ScoreView for ConsoleView {
     fn show_score(self: &Self, level: i8, score: u32, lines: u32) {
         print!("{}Level: {} Score: {} Lines: {}",
         termion::cursor::Goto(SCORE_BASE_COL, SCORE_BASE_ROW), level, score, lines);
     }
+}
 
+impl StaticView for ConsoleView {
     fn show_static(self: &Self) {
         print!("{}Move: ⬅️ ⬇️ ➡️  Rotate: ⬆️  Drop: Spacebar. Hold: h. Exit: q\n\r",
                termion::cursor::Goto(1, 1));
@@ -49,7 +61,9 @@ impl View for ConsoleView {
         let mut stdout = stdout().into_raw_mode().unwrap();
         stdout.flush().unwrap();
     }
+}
 
+impl NextView for ConsoleView {
     fn show_next(self: &Self, tetro: &mut Tetromino) {
         for (coords, shape) in tetro {
             let color = convert_to_color(ShapeAt{shape: shape, shape_at_type: ShapeAtType::Static});

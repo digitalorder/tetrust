@@ -1,5 +1,5 @@
 pub mod engine {
-    use crate::view::View as View;
+    use crate::view::{View};
     use crate::playfield as playfield;
     use crate::figures::figures as figures;
     use std::fmt;
@@ -60,9 +60,8 @@ pub mod engine {
         }
     }
 
-    pub struct Game<'a> {
+    pub struct Game {
         playfield: playfield::Playfield,
-        view: &'a dyn View,
         state: State,
         active_tetro: playfield::FieldTetromino,
         next_updated: bool,
@@ -77,9 +76,8 @@ pub mod engine {
         no_ghost: bool,
     }
 
-    pub fn new_game(config: Config, playfield: playfield::Playfield, view: &impl View) -> Game {
+    pub fn new_game(config: Config, playfield: playfield::Playfield) -> Game {
         Game {
-            view: view,
             playfield: playfield,
             state: State::Dropped,
             active_tetro: playfield::FieldTetromino::default(),
@@ -100,18 +98,18 @@ pub mod engine {
         game.state
     }
 
-    pub fn draw_frame(game: &mut Game) {
+    pub fn draw_frame(game: &mut Game, view: &impl View) {
         if game.score_updated {
             game.score_updated = false;
-            game.view.show_score(game.level, game.score, game.lines_cleared);
+            view.show_score(game.level, game.score, game.lines_cleared);
         };
         if game.static_updated {
             game.static_updated = false;
-            game.view.show_static();
+            view.show_static();
         }
         if game.next_updated {
             game.next_updated = false;
-            game.view.show_next(&mut game.next_tetro);
+            view.show_next(&mut game.next_tetro);
         }
         if game.playfield_updated {
             game.playfield_updated = false;
@@ -122,7 +120,7 @@ pub mod engine {
                 while game.playfield.move_tetro(&mut ghost_tetro, playfield::Dir::Down) {};
                 ghost_tetro
             };
-            game.view.show_playfield(&game.playfield, &game.active_tetro, &ghost_tetro);
+            view.show_playfield(&game.playfield, &game.active_tetro, &ghost_tetro);
         }
     }
 

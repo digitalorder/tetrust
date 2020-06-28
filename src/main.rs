@@ -12,9 +12,8 @@ use clap::{App, value_t};
 
 fn do_game(no_ghost: bool, level: u8) {
     let playfield = playfield::Playfield::new(Default::default());
-    let view = view::ConsoleView{};
     let config = engine::Config{no_ghost: no_ghost, level: level};
-    let mut game = engine::new_game(config, playfield, &view);
+    let mut game = engine::new_game(config, playfield);
 
     let (timer_tx, rx) = mpsc::channel();
     let keyboard_tx = timer_tx.clone();
@@ -50,9 +49,10 @@ fn do_game(no_ghost: bool, level: u8) {
     });
 
     while engine::get_state(&game) != engine::State::End {
+        let view = view::ConsoleView{};
         let event = rx.recv().unwrap();
         engine::calculate_frame(&mut game, event);
-        engine::draw_frame(&mut game);
+        engine::draw_frame(&mut game, &view);
 
         if event == engine::Event::KeyExit {
             break;
