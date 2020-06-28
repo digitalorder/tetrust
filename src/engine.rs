@@ -265,8 +265,8 @@ pub mod engine {
         }
     }
 
-    pub fn get_state(game: &Game) -> State {
-        game.state
+    pub fn is_finished(game: &Game) -> bool {
+        game.state == State::End
     }
 
     pub fn draw_frame(game: &mut Game, view: &impl View) {

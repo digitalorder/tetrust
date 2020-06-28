@@ -48,7 +48,7 @@ fn do_game(no_ghost: bool, level: u8) {
         }
     });
 
-    while engine::get_state(&game) != engine::State::End {
+    while !engine::is_finished(&game) {
         let view = view::ConsoleView{};
         let event = rx.recv().unwrap();
         engine::calculate_frame(&mut game, event);
