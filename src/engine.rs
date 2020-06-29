@@ -1,10 +1,10 @@
 pub mod engine {
-    use crate::view::{View, ShowArgs};
+    use crate::view::{View};
     use crate::playfield as playfield;
     use crate::playfield_ctrl::{PlayfieldCtrl};
     use crate::score_ctrl::{ScoreCtrl};
     use crate::next_tetro_ctrl::{NextTetroCtrl};
-    use crate::updateable_view::UpdatableView;
+    use crate::static_ctrl::{StaticCtrl};
     use std::fmt;
 
     pub struct Config {
@@ -62,32 +62,18 @@ pub mod engine {
         }
     }
 
-    struct StaticUpdatableView {
-        view: UpdatableView,
-    }
-
-    impl StaticUpdatableView {
-        fn show(self: &mut Self, view: &impl View) {
-            self.view.show(view, &ShowArgs::StaticArgs{});
-        }
-    }
-
-    impl Default for StaticUpdatableView {
-        fn default() -> Self {StaticUpdatableView{view: UpdatableView::default()}}
-    }
-
     pub struct Game {
         playfield: PlayfieldCtrl,
         state: State,
         next_tetro: NextTetroCtrl,
-        static_view: StaticUpdatableView,
+        static_ctrl: StaticCtrl,
         score: ScoreCtrl,
     }
 
     pub fn new_game(config: Config, playfield: playfield::Playfield) -> Game {
         Game {
             playfield: PlayfieldCtrl::new(playfield, config.no_ghost),
-            static_view: StaticUpdatableView::default(),
+            static_ctrl: StaticCtrl::default(),
             next_tetro: NextTetroCtrl::new(),
             score: ScoreCtrl::new(config.level as i8),
             state: State::Dropped,
@@ -100,7 +86,7 @@ pub mod engine {
 
     pub fn draw_frame(game: &mut Game, view: &impl View) {
         game.score.show(view);
-        game.static_view.show(view);
+        game.static_ctrl.show(view);
         game.next_tetro.show(view);
         game.playfield.show(view);
     }
