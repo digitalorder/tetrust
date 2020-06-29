@@ -2,10 +2,10 @@ pub mod engine {
     use crate::view::{View, ShowArgs};
     use crate::playfield as playfield;
     use crate::playfield_ctrl::{PlayfieldCtrl};
+    use crate::score_ctrl::{ScoreCtrl};
     use crate::figures::figures as figures;
     use crate::updateable_view::UpdatableView;
     use std::fmt;
-    use std::cmp;
 
     pub struct Config {
         pub no_ghost: bool,
@@ -76,54 +76,6 @@ pub mod engine {
         fn default() -> Self {StaticUpdatableView{view: UpdatableView::default()}}
     }
 
-    struct Score {
-        view: UpdatableView,
-        level: i8,
-        score: u32,
-        lines_cleared: u32,
-    }
-
-    impl Score {
-        fn score_increment(level: i8, cleared_lines: u8) -> u32 {
-            /* Level 1 line         2 lines         3 lines         4 lines
-             * 0     40             100             300             1200
-             * 1     80             200             600             2400
-             * 2     120            300             900             3600
-             * .......
-             * n     40 * (n + 1)   100 * (n + 1)   300 * (n + 1)   1200 * (n + 1)
-             */
-            let line_coeff: u32 = match cleared_lines {
-                0 => 0,
-                1 => 40,
-                2 => 100,
-                3 => 300,
-                _ => 1200,
-            };
-
-            line_coeff * (level as u32 + 1)
-        }
-
-        fn update(self: &mut Self, lines_cleared: u8) {
-            self.lines_cleared += lines_cleared as u32;
-            self.level = cmp::max(self.level, (self.lines_cleared / 10) as i8);
-            self.score += Score::score_increment(self.level, lines_cleared);
-            self.view.update();
-        }
-
-        fn show(self: &mut Self, view: &impl View) {
-            self.view.show(view, &ShowArgs::ScoreArgs{level: self.level, lines: self.lines_cleared, score: self.score});
-        }
-
-        fn new(level: i8) -> Self {
-            Score {
-                view: UpdatableView::default(),
-                level: if level < 29 { level as i8 } else { 29 },
-                score: 0,
-                lines_cleared: 0
-            }
-        }
-    }
-
     struct NextView {
         view: UpdatableView,
         next_tetro: figures::Tetromino,
@@ -149,8 +101,7 @@ pub mod engine {
         state: State,
         next_tetro_view: NextView,
         static_view: StaticUpdatableView,
-        score: Score,
-        frame_counter: i8,
+        score: ScoreCtrl,
     }
 
     pub fn new_game(config: Config, playfield: playfield::Playfield) -> Game {
@@ -158,9 +109,8 @@ pub mod engine {
             playfield: PlayfieldCtrl::new(playfield, config.no_ghost),
             static_view: StaticUpdatableView::default(),
             next_tetro_view: NextView::new(),
-            score: Score::new(config.level as i8),
+            score: ScoreCtrl::new(config.level as i8),
             state: State::Dropped,
-            frame_counter: 0,
         }
     }
 
@@ -185,28 +135,6 @@ pub mod engine {
         }
     }
 
-    fn max_frame_count(level: i8) -> i8 {
-        match level {
-            0..=8 => 48 - 5 * level,
-            9 => 6,
-            10..=12 => 5,
-            13..=15 => 4,
-            16..=18 => 3,
-            19..=28 => 2,
-            _ => 1
-        }
-    }
-
-    fn inc_frame_counter(game: &mut Game) -> bool {
-        game.frame_counter += 1;
-        if game.frame_counter >= max_frame_count(game.score.level) {
-            game.frame_counter = 0;
-            true
-        } else {
-            false
-        }
-    }
-
     fn move_down(game: &mut Game) -> State {
         let move_success = game.playfield.move_active(playfield::Dir::Down);
 
@@ -222,7 +150,7 @@ pub mod engine {
         match game.state {
             State::ActiveTetro => {
                 if event == Event::Timeout {
-                    if inc_frame_counter(game) {
+                    if game.score.inc_frame_counter() {
                         game.state = move_down(game);
                     }
                 } else if event == Event::KeyDown {
@@ -239,10 +167,10 @@ pub mod engine {
                          * otherwise holding drop key would effectively
                          * freeze game
                          */
-                        game.frame_counter = max_frame_count(game.score.level) - 30;
+                        game.score.lock_delay();
                     };
                 } else if event == Event::KeyHold {
-                    game.frame_counter = 0;
+                    game.score.hold();
                 }
             },
             State::Touched => {
