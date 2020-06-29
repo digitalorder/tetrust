@@ -5,3 +5,4 @@ pub mod engine;
 pub mod updateable_view;
 pub mod playfield_ctrl;
 pub mod score_ctrl;
+pub mod next_tetro_ctrl;

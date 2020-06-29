@@ -3,7 +3,7 @@ pub mod engine {
     use crate::playfield as playfield;
     use crate::playfield_ctrl::{PlayfieldCtrl};
     use crate::score_ctrl::{ScoreCtrl};
-    use crate::figures::figures as figures;
+    use crate::next_tetro_ctrl::{NextTetroCtrl};
     use crate::updateable_view::UpdatableView;
     use std::fmt;
 
@@ -76,30 +76,10 @@ pub mod engine {
         fn default() -> Self {StaticUpdatableView{view: UpdatableView::default()}}
     }
 
-    struct NextView {
-        view: UpdatableView,
-        next_tetro: figures::Tetromino,
-    }
-
-    impl NextView {
-        fn new_tetro(self: &mut Self) {
-            self.next_tetro = figures::Tetromino::new_random();
-            self.view.update();
-        }
-
-        fn show(self: &mut Self, view: &impl View) {
-            self.view.show(view, &ShowArgs::NextTetroArgs{tetro: self.next_tetro.clone()});
-        }
-
-        fn new() -> Self {
-            NextView{view: UpdatableView::default(), next_tetro: figures::Tetromino::new_random()}
-        }
-    }
-
     pub struct Game {
         playfield: PlayfieldCtrl,
         state: State,
-        next_tetro_view: NextView,
+        next_tetro: NextTetroCtrl,
         static_view: StaticUpdatableView,
         score: ScoreCtrl,
     }
@@ -108,7 +88,7 @@ pub mod engine {
         Game {
             playfield: PlayfieldCtrl::new(playfield, config.no_ghost),
             static_view: StaticUpdatableView::default(),
-            next_tetro_view: NextView::new(),
+            next_tetro: NextTetroCtrl::new(),
             score: ScoreCtrl::new(config.level as i8),
             state: State::Dropped,
         }
@@ -121,13 +101,12 @@ pub mod engine {
     pub fn draw_frame(game: &mut Game, view: &impl View) {
         game.score.show(view);
         game.static_view.show(view);
-        game.next_tetro_view.show(view);
+        game.next_tetro.show(view);
         game.playfield.show(view);
     }
 
     fn create_new_tetro(game: &mut Game) -> State {
-        let no_intersect = game.playfield.new_active(&game.next_tetro_view.next_tetro);
-        game.next_tetro_view.new_tetro();
+        let no_intersect = game.playfield.new_active(&game.next_tetro.pop());
         if no_intersect {
             State::ActiveTetro
         } else {
