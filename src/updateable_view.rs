@@ -20,3 +20,7 @@ impl UpdatableView {
 impl Default for UpdatableView {
     fn default() -> Self {UpdatableView{updated: true}}
 }
+
+pub trait Ctrl {
+    fn show(self: &mut Self, view: &impl View);
+}

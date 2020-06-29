@@ -1,4 +1,4 @@
-use crate::updateable_view::UpdatableView;
+use crate::updateable_view::{UpdatableView, Ctrl};
 use crate::playfield::{Playfield, FieldTetromino, Dir, Coords, HEIGHT, WIDTH};
 use crate::figures::figures::{Shape, Tetromino};
 use crate::view::{View, ShowArgs};
@@ -59,7 +59,18 @@ impl PlayfieldCtrl {
         result
     }
 
-    pub fn show(self: &mut Self, view: &impl View) {
+    pub fn new(playfield: Playfield, no_ghost: bool) -> Self {
+        PlayfieldCtrl{
+            playfield: playfield,
+            view: UpdatableView::default(),
+            no_ghost: no_ghost,
+            active_tetro: FieldTetromino::default(),
+        }
+    }
+}
+
+impl Ctrl for PlayfieldCtrl {
+    fn show(self: &mut Self, view: &impl View) {
         let ghost_tetro = if self.no_ghost {
             FieldTetromino::default()
         } else {
@@ -73,14 +84,5 @@ impl PlayfieldCtrl {
                                 active_tetro: &self.active_tetro,
                                 ghost_tetro: &ghost_tetro
                              });
-    }
-
-    pub fn new(playfield: Playfield, no_ghost: bool) -> Self {
-        PlayfieldCtrl{
-            playfield: playfield,
-            view: UpdatableView::default(),
-            no_ghost: no_ghost,
-            active_tetro: FieldTetromino::default(),
-        }
     }
 }

@@ -5,6 +5,7 @@ pub mod engine {
     use crate::score_ctrl::{ScoreCtrl};
     use crate::next_tetro_ctrl::{NextTetroCtrl};
     use crate::static_ctrl::{StaticCtrl};
+    use crate::updateable_view::Ctrl;
     use std::fmt;
 
     pub struct Config {

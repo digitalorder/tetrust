@@ -1,4 +1,4 @@
-use crate::updateable_view::UpdatableView;
+use crate::updateable_view::{UpdatableView, Ctrl};
 use crate::view::{View, ShowArgs};
 use std::cmp;
 
@@ -35,10 +35,6 @@ impl ScoreCtrl {
         self.level = cmp::max(self.level, (self.lines_cleared / 10) as i8);
         self.score += ScoreCtrl::score_increment(self.level, lines_cleared);
         self.view.update();
-    }
-
-    pub fn show(self: &mut Self, view: &impl View) {
-        self.view.show(view, &ShowArgs::ScoreArgs{level: self.level, lines: self.lines_cleared, score: self.score});
     }
 
     fn max_frame_count(level: i8) -> i8 {
@@ -79,5 +75,11 @@ impl ScoreCtrl {
             lines_cleared: 0,
             frame_counter: 0,
         }
+    }
+}
+
+impl Ctrl for ScoreCtrl {
+    fn show(self: &mut Self, view: &impl View) {
+        self.view.show(view, &ShowArgs::ScoreArgs{level: self.level, lines: self.lines_cleared, score: self.score});
     }
 }
