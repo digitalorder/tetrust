@@ -1,7 +1,9 @@
 pub mod engine {
     use crate::view::{View, ShowArgs};
     use crate::playfield as playfield;
+    use crate::playfield_ctrl::{PlayfieldCtrl};
     use crate::figures::figures as figures;
+    use crate::updateable_view::UpdatableView;
     use std::fmt;
     use std::cmp;
 
@@ -58,27 +60,6 @@ pub mod engine {
 
             write!(f, "{}", result)
         }
-    }
-
-    struct UpdatableView {
-        updated: bool,
-    }
-
-    impl UpdatableView {
-        fn update(self: &mut Self) {
-            self.updated = true;
-        }
-
-        fn show(self: &mut Self, view: &impl View, args: &ShowArgs) {
-            if self.updated {
-                view.show_subview(args);
-            }
-            self.updated = false;
-        }
-    }
-
-    impl Default for UpdatableView {
-        fn default() -> Self {UpdatableView{updated: true}}
     }
 
     struct StaticUpdatableView {
@@ -143,88 +124,6 @@ pub mod engine {
         }
     }
 
-    struct PlayfieldUpdatableView {
-        view: UpdatableView,
-        playfield: playfield::Playfield,
-        no_ghost: bool,
-        active_tetro: playfield::FieldTetromino,
-    }
-
-    impl PlayfieldUpdatableView {
-        fn move_active(self: &mut Self, dir: playfield::Dir) -> bool {
-            if self.playfield.move_tetro(&mut self.active_tetro, dir) {
-                self.view.update();
-                true
-            } else {
-                false
-            }
-        }
-
-        fn turn_active(self: &mut Self) -> bool {
-            if self.playfield.turn_tetro(&mut self.active_tetro) {
-                self.view.update();
-                true
-            } else {
-                false
-            }
-        }
-
-        fn place_active(self: &mut Self) {
-            let _ = self.playfield.place(&self.active_tetro.tetro, self.active_tetro.coords);
-            self.active_tetro.tetro.shape = figures::Shape::NoShape;
-            self.view.update();
-        }
-
-        fn new_active(self: &mut Self, tetro: &figures::Tetromino) -> bool{
-            self.active_tetro = playfield::FieldTetromino{
-                coords: playfield::Coords{row: playfield::HEIGHT - 1,
-                                          col: playfield::WIDTH / 2 - 2},
-                tetro: tetro.clone(),
-            };
-            self.view.update();
-            self.playfield.can_place(&self.active_tetro.tetro, &self.active_tetro.coords)
-        }
-
-        fn remove_filled(self: &mut Self) -> u8 {
-            let mut result = 0;
-
-            for r in (0..playfield::HEIGHT).rev() {
-                if self.playfield.row_filled(r) {
-                    result += 1;
-                    self.playfield.delete_row(r);
-                    self.view.update();
-                }
-            }
-
-            result
-        }
-
-        fn show(self: &mut Self, view: &impl View) {
-            let ghost_tetro = if self.no_ghost {
-                playfield::FieldTetromino::default()
-            } else {
-                let mut ghost_tetro = self.active_tetro.clone();
-                while self.playfield.move_tetro(&mut ghost_tetro, playfield::Dir::Down) {};
-                ghost_tetro
-            };
-
-            self.view.show(view, &ShowArgs::PlayfieldArgs{
-                                    playfield: &self.playfield,
-                                    active_tetro: &self.active_tetro,
-                                    ghost_tetro: &ghost_tetro
-                                 });
-        }
-
-        fn new(playfield: playfield::Playfield, no_ghost: bool) -> Self {
-            PlayfieldUpdatableView{
-                playfield: playfield,
-                view: UpdatableView::default(),
-                no_ghost: no_ghost,
-                active_tetro: playfield::FieldTetromino::default(),
-            }
-        }
-    }
-
     struct NextView {
         view: UpdatableView,
         next_tetro: figures::Tetromino,
@@ -246,7 +145,7 @@ pub mod engine {
     }
 
     pub struct Game {
-        playfield: PlayfieldUpdatableView,
+        playfield: PlayfieldCtrl,
         state: State,
         next_tetro_view: NextView,
         static_view: StaticUpdatableView,
@@ -256,7 +155,7 @@ pub mod engine {
 
     pub fn new_game(config: Config, playfield: playfield::Playfield) -> Game {
         Game {
-            playfield: PlayfieldUpdatableView::new(playfield, config.no_ghost),
+            playfield: PlayfieldCtrl::new(playfield, config.no_ghost),
             static_view: StaticUpdatableView::default(),
             next_tetro_view: NextView::new(),
             score: Score::new(config.level as i8),
