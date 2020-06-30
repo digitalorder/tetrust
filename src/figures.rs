@@ -19,19 +19,6 @@ pub mod figures {
         fn default() -> Self { Shape::NoShape }
     }
 
-    fn random_shape() -> Shape {
-        let mut rng = thread_rng();
-        match rng.gen_range(0, 7) {
-            0 => Shape::OShape,
-            1 => Shape::IShape,
-            2 => Shape::TShape,
-            3 => Shape::JShape,
-            4 => Shape::LShape,
-            5 => Shape::SShape,
-            _ => Shape::ZShape,
-        }
-    }
-
     pub const LAYOUT_WIDTH: i8 = 4;
     pub const LAYOUT_HEIGHT: i8 = 4;
     pub type Layout = [[u8; LAYOUT_WIDTH as usize]; LAYOUT_HEIGHT as usize];
@@ -120,14 +107,17 @@ pub mod figures {
         }
 
         pub fn new_random() -> Tetromino {
-            let mut tetro = Tetromino::new(random_shape());
             let mut rng = thread_rng();
-
-            for _ in 0..rng.gen_range(0, 3) {
-                rotate(&mut tetro);
-            }
-
-            tetro
+            let shape = match rng.gen_range(0, 7) {
+                0 => Shape::OShape,
+                1 => Shape::IShape,
+                2 => Shape::TShape,
+                3 => Shape::JShape,
+                4 => Shape::LShape,
+                5 => Shape::SShape,
+                _ => Shape::ZShape,
+            };
+            Tetromino::new(shape)
         }
 
         pub fn shape_at(self: &Self, coords: &Coords) -> Shape {
