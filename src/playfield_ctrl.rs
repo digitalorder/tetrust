@@ -1,6 +1,6 @@
 use crate::updateable_view::{UpdatableView, Ctrl};
-use crate::playfield::{Playfield, FieldTetromino, Dir, Coords, HEIGHT, WIDTH};
-use crate::figures::figures::{Shape, Tetromino};
+use crate::playfield::{Playfield, FieldTetromino, Dir, HEIGHT};
+use crate::figures::figures::{Shape};
 use crate::view::{View, ShowArgs};
 
 pub struct PlayfieldCtrl {
@@ -35,12 +35,8 @@ impl PlayfieldCtrl {
         self.view.update();
     }
 
-    pub fn new_active(self: &mut Self, tetro: &Tetromino) -> bool{
-        self.active_tetro = FieldTetromino{
-            coords: Coords{row: HEIGHT - 1,
-                           col: WIDTH / 2 - 2},
-            tetro: tetro.clone(),
-        };
+    pub fn new_active(self: &mut Self, tetro: FieldTetromino) -> bool {
+        self.active_tetro = tetro;
         self.view.update();
         self.playfield.can_place(&self.active_tetro.tetro, &self.active_tetro.coords)
     }

@@ -1,6 +1,7 @@
 use crate::updateable_view::{UpdatableView, Ctrl};
 use crate::view::{View, ShowArgs};
-use crate::figures::figures::{Tetromino};
+use crate::figures::figures::{Tetromino, Shape};
+use crate::playfield::{FieldTetromino, Coords, HEIGHT, WIDTH};
 
 pub struct NextTetroCtrl {
     view: UpdatableView,
@@ -8,8 +9,15 @@ pub struct NextTetroCtrl {
 }
 
 impl NextTetroCtrl {
-    pub fn pop(self: &mut Self) -> Tetromino {
-        let tetro = self.next_tetro.clone();
+    pub fn pop(self: &mut Self) -> FieldTetromino {
+        let coords = match self.next_tetro.shape {
+            Shape::LShape | Shape::TShape | Shape::JShape => Coords{row: HEIGHT, col: WIDTH / 2 - 2},
+            _ => Coords{row: HEIGHT + 1, col: WIDTH / 2 - 2},
+        };
+        let tetro = FieldTetromino{
+            coords: coords,
+            tetro: self.next_tetro.clone(),
+        };
         self.next_tetro = Tetromino::new_random();
         self.view.update();
         tetro

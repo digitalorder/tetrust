@@ -93,8 +93,8 @@ pub mod engine {
     }
 
     fn create_new_tetro(game: &mut Game) -> State {
-        let no_intersect = game.playfield.new_active(&game.next_tetro.pop());
-        if no_intersect {
+        if game.playfield.new_active(game.next_tetro.pop()) {
+            /* tetro can be placed in start position */
             State::ActiveTetro
         } else {
             State::End
