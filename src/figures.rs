@@ -65,13 +65,25 @@ pub mod figures {
     }
 
     fn rotate_ordinary(layout: &mut Layout) {
-        /* rotate corner pieces clockwise */
+        /* rotate corner pieces clockwise
+         *   0123
+         * 0 *-*-
+         * 1 ----
+         * 2 *-*-
+         * 3 ----
+         */
         let temp = layout[0][2];
         layout[0][2] = layout[0][0];
         layout[0][0] = layout[2][0];
         layout[2][0] = layout[2][2];
         layout[2][2] = temp;
-        /* rotate in-between corner pieces clockwise */
+        /* rotate in-between corner pieces clockwise
+         *   0123
+         * 0 -*--
+         * 1 *-*-
+         * 2 -*--
+         * 3 ----
+         */
         let temp = layout[0][1];
         layout[0][1] = layout[1][0];
         layout[1][0] = layout[2][1];
@@ -96,9 +108,9 @@ pub mod figures {
             let layout = match shape {
                 Shape::OShape => [[0, 0, 0, 0], [0, 1, 1, 0], [0, 1, 1, 0], [0, 0, 0, 0]],
                 Shape::IShape => [[0, 0, 0, 0], [0, 0, 0, 0], [1, 1, 1, 1], [0, 0, 0, 0]],
-                Shape::TShape => [[0, 0, 0, 0], [1, 1, 1, 0], [0, 1, 0, 0], [0, 0, 0, 0]],
-                Shape::JShape => [[0, 0, 0, 0], [1, 1, 1, 0], [0, 0, 1, 0], [0, 0, 0, 0]],
-                Shape::LShape => [[0, 0, 0, 0], [1, 1, 1, 0], [1, 0, 0, 0], [0, 0, 0, 0]],
+                Shape::TShape => [[0, 1, 0, 0], [1, 1, 1, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
+                Shape::JShape => [[1, 0, 0, 0], [1, 1, 1, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
+                Shape::LShape => [[0, 0, 1, 0], [1, 1, 1, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
                 Shape::SShape => [[0, 0, 0, 0], [0, 1, 1, 0], [1, 1, 0, 0], [0, 0, 0, 0]],
                 Shape::ZShape => [[0, 0, 0, 0], [1, 1, 0, 0], [0, 1, 1, 0], [0, 0, 0, 0]],
                 Shape::NoShape => [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
@@ -215,16 +227,16 @@ mod tests {
         let mut f = Tetromino::new(Shape::TShape);
         /* 90 degrees */
         rotate(&mut f);
-        assert_shape(&f, &[[0, 1, 0, 0], [1, 1, 0, 0], [0, 1, 0, 0], [0, 0, 0, 0]]);
+        assert_shape(&f, &[[0, 1, 0, 0], [0, 1, 1, 0], [0, 1, 0, 0], [0, 0, 0, 0]]);
         /* 180 degrees */
         rotate(&mut f);
-        assert_shape(&f, &[[0, 1, 0, 0], [1, 1, 1, 0], [0, 0, 0, 0], [0, 0, 0, 0]]);
+        assert_shape(&f, &[[0, 0, 0, 0], [1, 1, 1, 0], [0, 1, 0, 0], [0, 0, 0, 0]]);
         /* 270 degrees */
         rotate(&mut f);
-        assert_shape(&f, &[[0, 1, 0, 0], [0, 1, 1, 0], [0, 1, 0, 0], [0, 0, 0, 0]]);
+        assert_shape(&f, &[[0, 1, 0, 0], [1, 1, 0, 0], [0, 1, 0, 0], [0, 0, 0, 0]]);
         /* 360 degrees */
         rotate(&mut f);
-        assert_shape(&f, &[[0, 0, 0, 0], [1, 1, 1, 0], [0, 1, 0, 0], [0, 0, 0, 0]]);
+        assert_shape(&f, &[[0, 1, 0, 0], [1, 1, 1, 0], [0, 0, 0, 0], [0, 0, 0, 0]]);
     }
 
     #[test]
@@ -232,16 +244,16 @@ mod tests {
         let mut f = Tetromino::new(Shape::JShape);
         /* 90 degrees */
         rotate(&mut f);
-        assert_shape(&f, &[[0, 1, 0, 0], [0, 1, 0, 0], [1, 1, 0, 0], [0, 0, 0, 0]]);
+        assert_shape(&f, &[[0, 1, 1, 0], [0, 1, 0, 0], [0, 1, 0, 0], [0, 0, 0, 0]]);
         /* 180 degrees */
         rotate(&mut f);
-        assert_shape(&f, &[[1, 0, 0, 0], [1, 1, 1, 0], [0, 0, 0, 0], [0, 0, 0, 0]]);
+        assert_shape(&f, &[[0, 0, 0, 0], [1, 1, 1, 0], [0, 0, 1, 0], [0, 0, 0, 0]]);
         /* 270 degrees */
         rotate(&mut f);
-        assert_shape(&f, &[[0, 1, 1, 0], [0, 1, 0, 0], [0, 1, 0, 0], [0, 0, 0, 0]]);
+        assert_shape(&f, &[[0, 1, 0, 0], [0, 1, 0, 0], [1, 1, 0, 0], [0, 0, 0, 0]]);
         /* 360 degrees */
         rotate(&mut f);
-        assert_shape(&f, &[[0, 0, 0, 0], [1, 1, 1, 0], [0, 0, 1, 0], [0, 0, 0, 0]]);
+        assert_shape(&f, &[[1, 0, 0, 0], [1, 1, 1, 0], [0, 0, 0, 0], [0, 0, 0, 0]]);
     }
 
     #[test]
@@ -249,16 +261,16 @@ mod tests {
         let mut f = Tetromino::new(Shape::LShape);
         /* 90 degrees */
         rotate(&mut f);
-        assert_shape(&f, &[[1, 1, 0, 0], [0, 1, 0, 0], [0, 1, 0, 0], [0, 0, 0, 0]]);
+        assert_shape(&f, &[[0, 1, 0, 0], [0, 1, 0, 0], [0, 1, 1, 0], [0, 0, 0, 0]]);
         /* 180 degrees */
         rotate(&mut f);
-        assert_shape(&f, &[[0, 0, 1, 0], [1, 1, 1, 0], [0, 0, 0, 0], [0, 0, 0, 0]]);
+        assert_shape(&f, &[[0, 0, 0, 0], [1, 1, 1, 0], [1, 0, 0, 0], [0, 0, 0, 0]]);
         /* 270 degrees */
         rotate(&mut f);
-        assert_shape(&f, &[[0, 1, 0, 0], [0, 1, 0, 0], [0, 1, 1, 0], [0, 0, 0, 0]]);
+        assert_shape(&f, &[[1, 1, 0, 0], [0, 1, 0, 0], [0, 1, 0, 0], [0, 0, 0, 0]]);
         /* 360 degrees */
         rotate(&mut f);
-        assert_shape(&f, &[[0, 0, 0, 0], [1, 1, 1, 0], [1, 0, 0, 0], [0, 0, 0, 0]]);
+        assert_shape(&f, &[[0, 0, 1, 0], [1, 1, 1, 0], [0, 0, 0, 0], [0, 0, 0, 0]]);
     }
 
     #[test]
@@ -298,7 +310,6 @@ mod tests {
     #[test]
     fn iterator_interface() {
         let f = Tetromino::new(Shape::ZShape);
-        /* 90 degrees */
         let result = [[Shape::NoShape, Shape::NoShape, Shape::NoShape, Shape::NoShape],
                       [Shape::ZShape, Shape::ZShape, Shape::NoShape, Shape::NoShape],
                       [Shape::NoShape, Shape::ZShape, Shape::ZShape, Shape::NoShape],

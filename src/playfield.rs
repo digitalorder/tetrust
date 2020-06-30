@@ -378,14 +378,10 @@ mod tests {
          * +----------+
          */
         let mut playfield: Playfield = Playfield::new(Default::default());
-        let mut active_tetro = FieldTetromino{
+        let active_tetro = FieldTetromino{
             tetro: figures::Tetromino::new(figures::Shape::LShape),
-            coords: Coords{col: 0, row: 2},
+            coords: Coords{col: 0, row: 1},
         };
-        assert_eq!(playfield.turn_tetro(&mut active_tetro), true);
-        assert_eq!(playfield.turn_tetro(&mut active_tetro), true);
-        playfield.move_tetro(&mut active_tetro, Dir::Down);
-        playfield.move_tetro(&mut active_tetro, Dir::Down);
         /* and place this figure */
         let place_result = playfield.place(&active_tetro.tetro, active_tetro.coords);
         assert_eq!(place_result.is_ok(), true);
