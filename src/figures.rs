@@ -1,6 +1,4 @@
 pub mod figures {
-    extern crate rand;
-    use rand::prelude::*;
     use crate::playfield::Coords;
 
     #[derive(Clone, PartialEq, Debug)]
@@ -116,20 +114,6 @@ pub mod figures {
                 Shape::NoShape => [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
             };
             Tetromino {shape: shape, layout: layout, iter_row: 0, iter_col: 0}
-        }
-
-        pub fn new_random() -> Tetromino {
-            let mut rng = thread_rng();
-            let shape = match rng.gen_range(0, 7) {
-                0 => Shape::OShape,
-                1 => Shape::IShape,
-                2 => Shape::TShape,
-                3 => Shape::JShape,
-                4 => Shape::LShape,
-                5 => Shape::SShape,
-                _ => Shape::ZShape,
-            };
-            Tetromino::new(shape)
         }
 
         pub fn shape_at(self: &Self, coords: &Coords) -> Shape {
