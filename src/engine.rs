@@ -136,7 +136,12 @@ pub mod engine {
                         game.score.lock_delay();
                     };
                 } else if event == Event::KeyHold {
-                    game.score.hold();
+                    let active_shape = game.playfield.active_shape();
+
+                    match game.next_tetro.swap(active_shape) {
+                        Ok(tetro) => {game.playfield.new_active(tetro);},
+                        _ => /* do nothing */{},
+                    };
                 }
             },
             State::Touched => {

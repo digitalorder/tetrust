@@ -63,10 +63,6 @@ impl ScoreCtrl {
         self.frame_counter = ScoreCtrl::max_frame_count(self.level) - 30;
     }
 
-    pub fn hold(self: &mut Self) {
-        self.frame_counter = 0;
-    }
-
     pub fn new(level: i8) -> Self {
         ScoreCtrl {
             view: UpdatableView::default(),

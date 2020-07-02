@@ -7,22 +7,16 @@ use rand::seq::SliceRandom;
 
 pub struct NextTetroCtrl {
     view: UpdatableView,
-    bag: [u8; 7],
+    bag: [Shape; 7],
     bag_index: usize,
+    pushed_flag: bool,
 }
+
+pub struct AlreadyPushed;
 
 impl NextTetroCtrl {
     fn get_current_shape(self: &Self) -> Shape {
-        let shape_num = self.bag[self.bag_index];
-        match shape_num {
-            1 => Shape::OShape,
-            2 => Shape::IShape,
-            3 => Shape::TShape,
-            4 => Shape::JShape,
-            5 => Shape::LShape,
-            6 => Shape::SShape,
-            _ => Shape::ZShape,
-        }
+        self.bag[self.bag_index].clone()
     }
 
     fn draw_next(self: &mut Self) {
@@ -32,6 +26,7 @@ impl NextTetroCtrl {
             self.bag = NextTetroCtrl::shuffle_bag();
             self.bag_index = 0;
         };
+        self.pushed_flag = false;
     }
 
     pub fn pop(self: &mut Self) -> FieldTetromino {
@@ -49,21 +44,44 @@ impl NextTetroCtrl {
         tetro
     }
 
-    fn shuffle_bag() -> [u8; 7] {
+    pub fn swap(self: &mut Self, shape: Shape) -> Result<(FieldTetromino), AlreadyPushed> {
+        if self.pushed_flag {
+            return Err(AlreadyPushed{});
+        }
+
+        let popped = self.pop();
+        if self.bag_index > 0 {
+            self.bag_index -= 1;
+        } else {
+            self.bag_index = self.bag.len() - 1;
+        }
+        self.bag[self.bag_index] = shape;
+        self.pushed_flag = true;
+        Ok(popped)
+    }
+
+    fn shuffle_bag() -> [Shape; 7] {
         let mut rnd = thread_rng();
-        let mut bag = [1, 2, 3, 4, 5, 6, 7];
+        let mut bag = [Shape::OShape, Shape::IShape,
+                       Shape::TShape, Shape::JShape,
+                       Shape::LShape, Shape::SShape,
+                       Shape::ZShape,];
         bag.shuffle(&mut rnd);
         bag
     }
 
     pub fn new() -> Self {
-        NextTetroCtrl{view: UpdatableView::default(), bag: NextTetroCtrl::shuffle_bag(), bag_index: 0}
+        NextTetroCtrl{
+            view: UpdatableView::default(),
+            bag: NextTetroCtrl::shuffle_bag(),
+            bag_index: 0,
+            pushed_flag: false
+        }
     }
 }
 
 impl Ctrl for NextTetroCtrl {
     fn show(self: &mut Self, view: &impl View) {
-        let tetro = Tetromino::new(self.get_current_shape());
-        self.view.show(view, &ShowArgs::NextTetroArgs{tetro: tetro});
+        self.view.show(view, &ShowArgs::NextTetroArgs{next: self.get_current_shape()});
     }
 }

@@ -41,6 +41,10 @@ impl PlayfieldCtrl {
         self.playfield.can_place(&self.active_tetro.tetro, &self.active_tetro.coords)
     }
 
+    pub fn active_shape(self: &Self) -> Shape {
+        self.active_tetro.tetro.shape.clone()
+    }
+
     pub fn remove_filled(self: &mut Self) -> u8 {
         let mut result = 0;
 

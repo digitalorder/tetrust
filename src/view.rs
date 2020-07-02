@@ -9,7 +9,7 @@ pub enum ShowArgs<'a> {
     StaticArgs,
     PlayfieldArgs{playfield: &'a Playfield, active_tetro: &'a FieldTetromino, ghost_tetro: &'a FieldTetromino},
     ScoreArgs{level: i8, score: u32, lines: u32},
-    NextTetroArgs{tetro: Tetromino},
+    NextTetroArgs{next: Shape},
 }
 
 pub trait View {
@@ -48,8 +48,8 @@ impl View for ConsoleView {
                 print!("{}", termion::color::Bg(termion::color::Black));
                 print!("{}", termion::cursor::Goto(1, HEIGHT as u16 + 4));
             },
-            ShowArgs::NextTetroArgs{tetro} => {
-                for (coords, shape) in tetro.clone() {
+            ShowArgs::NextTetroArgs{next} => {
+                for (coords, shape) in Tetromino::new(next.clone()) {
                     let color = convert_to_color(ShapeAt{shape: shape, shape_at_type: ShapeAtType::Static});
                     print!("{}{}  {}", termion::cursor::Goto((NEXT_TETRO_BASE_COL + 1 + coords.col * 2) as u16,
                                                              (NEXT_TETRO_BASE_ROW + 1 + coords.row) as u16),
