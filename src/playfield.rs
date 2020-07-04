@@ -177,6 +177,11 @@ impl Playfield {
         false
     }
 
+    pub fn has_fall_space(self: &Self, tetro: &FieldTetrimino) -> bool {
+        let move_down_coords = Coords{col: tetro.coords.col, row: tetro.coords.row - 1};
+        self.can_place(&tetro.tetro, &move_down_coords)
+    }
+
     pub fn turn_tetro(self: &Self, tetro: &mut FieldTetrimino) -> bool {
         if tetro.tetro.shape == figures::Shape::NoShape {
             return false;

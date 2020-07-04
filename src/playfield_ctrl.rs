@@ -11,22 +11,24 @@ pub struct PlayfieldCtrl {
 }
 
 impl PlayfieldCtrl {
-    pub fn move_active(self: &mut Self, dir: Dir) -> bool {
-        if self.playfield.move_tetro(&mut self.active_tetro, dir) {
+    pub fn move_active(self: &mut Self, dir: Dir) -> (bool, bool) {
+        let move_result = self.playfield.move_tetro(&mut self.active_tetro, dir);
+        let fall_space = self.playfield.has_fall_space(&mut self.active_tetro);
+        if move_result {
             self.view.update();
-            true
-        } else {
-            false
         }
+
+        (move_result, fall_space)
     }
 
-    pub fn turn_active(self: &mut Self) -> bool {
-        if self.playfield.turn_tetro(&mut self.active_tetro) {
+    pub fn turn_active(self: &mut Self) -> (bool, bool) {
+        let move_result = self.playfield.turn_tetro(&mut self.active_tetro);
+        let fall_space = self.playfield.has_fall_space(&mut self.active_tetro);
+        if move_result {
             self.view.update();
-            true
-        } else {
-            false
-        }
+        };
+
+        (move_result, fall_space)
     }
 
     pub fn place_active(self: &mut Self) {
