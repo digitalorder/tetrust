@@ -1,5 +1,5 @@
-use crate::playfield::{Playfield, FieldTetromino, WIDTH, HEIGHT, Coords, ShapeAt, ShapeAtType};
-use crate::figures::figures::{Shape, Tetromino, LAYOUT_HEIGHT, LAYOUT_WIDTH};
+use crate::playfield::{Playfield, FieldTetrimino, WIDTH, HEIGHT, Coords, ShapeAt, ShapeAtType};
+use crate::figures::figures::{Shape, Tetrimino, LAYOUT_HEIGHT, LAYOUT_WIDTH};
 use std::io::{stdout, Write};
 use termion::raw::IntoRawMode;
 extern crate termion;
@@ -7,7 +7,7 @@ extern crate termion;
 pub type Row = [char; WIDTH as usize];
 pub enum ShowArgs<'a> {
     StaticArgs,
-    PlayfieldArgs{playfield: &'a Playfield, active_tetro: &'a FieldTetromino, ghost_tetro: &'a FieldTetromino},
+    PlayfieldArgs{playfield: &'a Playfield, active_tetro: &'a FieldTetrimino, ghost_tetro: &'a FieldTetrimino},
     ScoreArgs{level: i8, score: u32, lines: u32},
     NextTetroArgs{next: Shape},
 }
@@ -49,7 +49,7 @@ impl View for ConsoleView {
                 print!("{}", termion::cursor::Goto(1, HEIGHT as u16 + 4));
             },
             ShowArgs::NextTetroArgs{next} => {
-                for (coords, shape) in Tetromino::new(next.clone()) {
+                for (coords, shape) in Tetrimino::new(next.clone()) {
                     let color = convert_to_color(ShapeAt{shape: shape, shape_at_type: ShapeAtType::Static});
                     print!("{}{}  {}", termion::cursor::Goto((NEXT_TETRO_BASE_COL + 1 + coords.col * 2) as u16,
                                                              (NEXT_TETRO_BASE_ROW + 1 + coords.row) as u16),
@@ -138,7 +138,7 @@ mod tests {
     // fn show_empty_view() {
     //     let playfield: Playfield = Playfield::new(Storage::default());
     //     let view: ConsoleView = ConsoleView{};
-    //     let active_tetro = FieldTetromino::default();
+    //     let active_tetro = FieldTetrimino::default();
 
     //     for i in 0..HEIGHT {
     //         let row: String = view.show_row(&playfield, i, &active_tetro).iter().collect();
@@ -151,17 +151,17 @@ mod tests {
     //     let mut playfield: Playfield = Playfield::new(Storage::default());
     //     let view: ConsoleView = ConsoleView{};
     //     let place_result = playfield.place(
-    //         &figures::Tetromino::new(figures::Shape::OShape),
+    //         &figures::Tetrimino::new(figures::Shape::OShape),
     //         Coords{col: 5, row: 2}
     //     );
     //     assert_eq!(place_result.is_ok(), true);
     //     let place_result = playfield.place(
-    //         &figures::Tetromino::new(figures::Shape::TShape),
+    //         &figures::Tetrimino::new(figures::Shape::TShape),
     //         Coords{col: 0, row: 5}
     //     );
     //     assert_eq!(place_result.is_ok(), true);
-    //     let active_tetro = FieldTetromino{
-    //         tetro: figures::Tetromino::new(figures::Shape::LShape),
+    //     let active_tetro = FieldTetrimino{
+    //         tetro: figures::Tetrimino::new(figures::Shape::LShape),
     //         coords: Coords{col: 2, row: 4},
     //     };
 

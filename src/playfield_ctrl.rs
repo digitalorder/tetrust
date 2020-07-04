@@ -1,5 +1,5 @@
 use crate::updateable_view::{UpdatableView, Ctrl};
-use crate::playfield::{Playfield, FieldTetromino, Dir, HEIGHT};
+use crate::playfield::{Playfield, FieldTetrimino, Dir, HEIGHT};
 use crate::figures::figures::{Shape};
 use crate::view::{View, ShowArgs};
 
@@ -7,7 +7,7 @@ pub struct PlayfieldCtrl {
     view: UpdatableView,
     playfield: Playfield,
     no_ghost: bool,
-    active_tetro: FieldTetromino,
+    active_tetro: FieldTetrimino,
 }
 
 impl PlayfieldCtrl {
@@ -35,7 +35,7 @@ impl PlayfieldCtrl {
         self.view.update();
     }
 
-    pub fn new_active(self: &mut Self, tetro: FieldTetromino) -> bool {
+    pub fn new_active(self: &mut Self, tetro: FieldTetrimino) -> bool {
         self.active_tetro = tetro;
         self.view.update();
         self.playfield.can_place(&self.active_tetro.tetro, &self.active_tetro.coords)
@@ -64,7 +64,7 @@ impl PlayfieldCtrl {
             playfield: playfield,
             view: UpdatableView::default(),
             no_ghost: no_ghost,
-            active_tetro: FieldTetromino::default(),
+            active_tetro: FieldTetrimino::default(),
         }
     }
 }
@@ -72,7 +72,7 @@ impl PlayfieldCtrl {
 impl Ctrl for PlayfieldCtrl {
     fn show(self: &mut Self, view: &impl View) {
         let ghost_tetro = if self.no_ghost {
-            FieldTetromino::default()
+            FieldTetrimino::default()
         } else {
             let mut ghost_tetro = self.active_tetro.clone();
             while self.playfield.move_tetro(&mut ghost_tetro, Dir::Down) {};

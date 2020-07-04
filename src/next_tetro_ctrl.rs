@@ -1,7 +1,7 @@
 use crate::updateable_view::{UpdatableView, Ctrl};
 use crate::view::{View, ShowArgs};
-use crate::figures::figures::{Tetromino, Shape};
-use crate::playfield::{FieldTetromino, Coords, HEIGHT, WIDTH};
+use crate::figures::figures::{Tetrimino, Shape};
+use crate::playfield::{FieldTetrimino, Coords, HEIGHT, WIDTH};
 use rand::{thread_rng};
 use rand::seq::SliceRandom;
 
@@ -29,22 +29,22 @@ impl NextTetroCtrl {
         self.pushed_flag = false;
     }
 
-    pub fn pop(self: &mut Self) -> FieldTetromino {
+    pub fn pop(self: &mut Self) -> FieldTetrimino {
         let shape = self.get_current_shape();
         self.draw_next();
         let coords = match shape {
             Shape::LShape | Shape::TShape | Shape::JShape => Coords{row: HEIGHT, col: WIDTH / 2 - 2},
             _ => Coords{row: HEIGHT + 1, col: WIDTH / 2 - 2},
         };
-        let tetro = FieldTetromino{
+        let tetro = FieldTetrimino{
             coords: coords,
-            tetro: Tetromino::new(shape),
+            tetro: Tetrimino::new(shape),
         };
         self.view.update();
         tetro
     }
 
-    pub fn swap(self: &mut Self, shape: Shape) -> Result<(FieldTetromino), AlreadyPushed> {
+    pub fn swap(self: &mut Self, shape: Shape) -> Result<(FieldTetrimino), AlreadyPushed> {
         if self.pushed_flag {
             return Err(AlreadyPushed{});
         }

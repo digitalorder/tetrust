@@ -22,7 +22,7 @@ pub mod figures {
     pub type Layout = [[u8; LAYOUT_WIDTH as usize]; LAYOUT_HEIGHT as usize];
 
     #[derive(Clone)]
-    pub struct Tetromino {
+    pub struct Tetrimino {
         pub shape: Shape,
         layout: Layout,
         iter_row: i8,
@@ -42,7 +42,7 @@ pub mod figures {
 
     fn rotate_special_s(layout: &mut Layout) {
         /* s shape switches between two states */
-        let original_layout = Tetromino::new(Shape::SShape).layout;
+        let original_layout = Tetrimino::new(Shape::SShape).layout;
         let turned_layout = [[0, 1, 0, 0], [0, 1, 1, 0], [0, 0, 1, 0], [0, 0, 0, 0]];
         if *layout == original_layout {
             *layout = turned_layout;
@@ -53,7 +53,7 @@ pub mod figures {
 
     fn rotate_special_z(layout: &mut Layout) {
         /* z shape switches between two states */
-        let original_layout = Tetromino::new(Shape::ZShape).layout;
+        let original_layout = Tetrimino::new(Shape::ZShape).layout;
         let turned_layout = [[0, 0, 1, 0], [0, 1, 1, 0], [0, 1, 0, 0], [0, 0, 0, 0]];
         if *layout == original_layout {
             *layout = turned_layout;
@@ -89,7 +89,7 @@ pub mod figures {
         layout[1][2] = temp;
     }
 
-    pub fn rotate(tetromino: &mut Tetromino) {
+    pub fn rotate(tetromino: &mut Tetrimino) {
         match tetromino.shape {
             /* o doesn't need any rotation */
             Shape::OShape => (),
@@ -101,8 +101,8 @@ pub mod figures {
         }
     }
 
-    impl Tetromino {
-        pub fn new(shape: Shape) -> Tetromino {
+    impl Tetrimino {
+        pub fn new(shape: Shape) -> Tetrimino {
             let layout = match shape {
                 Shape::OShape => [[0, 0, 0, 0], [0, 1, 1, 0], [0, 1, 1, 0], [0, 0, 0, 0]],
                 Shape::IShape => [[0, 0, 0, 0], [0, 0, 0, 0], [1, 1, 1, 1], [0, 0, 0, 0]],
@@ -113,7 +113,7 @@ pub mod figures {
                 Shape::ZShape => [[0, 0, 0, 0], [1, 1, 0, 0], [0, 1, 1, 0], [0, 0, 0, 0]],
                 Shape::NoShape => [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
             };
-            Tetromino {shape: shape, layout: layout, iter_row: 0, iter_col: 0}
+            Tetrimino {shape: shape, layout: layout, iter_row: 0, iter_col: 0}
         }
 
         pub fn shape_at(self: &Self, coords: &Coords) -> Shape {
@@ -124,7 +124,7 @@ pub mod figures {
         }
     }
 
-    impl Iterator for Tetromino {
+    impl Iterator for Tetrimino {
         type Item = (Coords, Shape);
 
         fn next(&mut self) -> Option<Self::Item> {
@@ -150,7 +150,7 @@ mod tests {
     use super::figures::*;
     use crate::playfield::Coords;
 
-    fn assert_shape(tetro: &Tetromino, binary_array: &Layout) {
+    fn assert_shape(tetro: &Tetrimino, binary_array: &Layout) {
         for row in 0..LAYOUT_HEIGHT {
             for col in 0..LAYOUT_WIDTH {
                 let coords = Coords{row: row, col: col};
@@ -165,14 +165,14 @@ mod tests {
 
     #[test]
     fn create_o_shape() {
-        let f = Tetromino::new(Shape::OShape);
+        let f = Tetrimino::new(Shape::OShape);
         assert_eq!(f.shape, Shape::OShape);
         assert_shape(&f, &[[0, 0, 0, 0], [0, 1, 1, 0], [0, 1, 1, 0], [0, 0, 0, 0]]);
     }
 
     #[test]
     fn rotate_o_shape() {
-        let mut f = Tetromino::new(Shape::OShape);
+        let mut f = Tetrimino::new(Shape::OShape);
         /* o shape remains the same, no matter how much you rotate it */
         /* 90 degrees */
         rotate(&mut f);
@@ -190,7 +190,7 @@ mod tests {
 
      #[test]
     fn rotate_i_shape() {
-        let mut f = Tetromino::new(Shape::IShape);
+        let mut f = Tetrimino::new(Shape::IShape);
         /* i shape switches between two states */
         /* 90 degrees */
         rotate(&mut f);
@@ -208,7 +208,7 @@ mod tests {
 
     #[test]
     fn rotate_t_shape() {
-        let mut f = Tetromino::new(Shape::TShape);
+        let mut f = Tetrimino::new(Shape::TShape);
         /* 90 degrees */
         rotate(&mut f);
         assert_shape(&f, &[[0, 1, 0, 0], [0, 1, 1, 0], [0, 1, 0, 0], [0, 0, 0, 0]]);
@@ -225,7 +225,7 @@ mod tests {
 
     #[test]
     fn rotate_j_shape() {
-        let mut f = Tetromino::new(Shape::JShape);
+        let mut f = Tetrimino::new(Shape::JShape);
         /* 90 degrees */
         rotate(&mut f);
         assert_shape(&f, &[[0, 1, 1, 0], [0, 1, 0, 0], [0, 1, 0, 0], [0, 0, 0, 0]]);
@@ -242,7 +242,7 @@ mod tests {
 
     #[test]
     fn rotate_l_shape() {
-        let mut f = Tetromino::new(Shape::LShape);
+        let mut f = Tetrimino::new(Shape::LShape);
         /* 90 degrees */
         rotate(&mut f);
         assert_shape(&f, &[[0, 1, 0, 0], [0, 1, 0, 0], [0, 1, 1, 0], [0, 0, 0, 0]]);
@@ -259,7 +259,7 @@ mod tests {
 
     #[test]
     fn rotate_s_shape() {
-        let mut f = Tetromino::new(Shape::SShape);
+        let mut f = Tetrimino::new(Shape::SShape);
         /* 90 degrees */
         rotate(&mut f);
         assert_shape(&f, &[[0, 1, 0, 0], [0, 1, 1, 0], [0, 0, 1, 0], [0, 0, 0, 0]]);
@@ -276,7 +276,7 @@ mod tests {
 
     #[test]
     fn rotate_z_shape() {
-        let mut f = Tetromino::new(Shape::ZShape);
+        let mut f = Tetrimino::new(Shape::ZShape);
         /* 90 degrees */
         rotate(&mut f);
         assert_shape(&f, &[[0, 0, 1, 0], [0, 1, 1, 0], [0, 1, 0, 0], [0, 0, 0, 0]]);
@@ -293,7 +293,7 @@ mod tests {
 
     #[test]
     fn iterator_interface() {
-        let f = Tetromino::new(Shape::ZShape);
+        let f = Tetrimino::new(Shape::ZShape);
         let result = [[Shape::NoShape, Shape::NoShape, Shape::NoShape, Shape::NoShape],
                       [Shape::ZShape, Shape::ZShape, Shape::NoShape, Shape::NoShape],
                       [Shape::NoShape, Shape::ZShape, Shape::ZShape, Shape::NoShape],
