@@ -15,19 +15,17 @@ pub mod engine {
 
     #[derive(PartialEq)]
     pub enum State {
-        Dropped,
-        ActiveTetro,
-        Touched,
-        End,
+        CompletionPhase,
+        FallingPhase,
+        GameOver,
     }
 
     impl fmt::Display for State {
         fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
             let result = match self {
-                State::ActiveTetro => "active",
-                State::Touched => "touched",
-                State::Dropped => "dropped",
-                State::End => "end",
+                State::FallingPhase => "falling",
+                State::CompletionPhase => "completion",
+                State::GameOver => "gameover",
             };
 
             write!(f, "{}", result)
@@ -77,12 +75,12 @@ pub mod engine {
             static_ctrl: StaticCtrl::default(),
             next_tetro: NextTetroCtrl::new(),
             score: ScoreCtrl::new(config.level as i8),
-            state: State::Dropped,
+            state: State::CompletionPhase,
         }
     }
 
     pub fn is_finished(game: &Game) -> bool {
-        game.state == State::End
+        game.state == State::GameOver
     }
 
     pub fn draw_frame(game: &mut Game, view: &impl View) {
@@ -95,9 +93,9 @@ pub mod engine {
     fn create_new_tetro(game: &mut Game) -> State {
         if game.playfield.new_active(game.next_tetro.pop()) {
             /* tetro can be placed in start position */
-            State::ActiveTetro
+            State::FallingPhase
         } else {
-            State::End
+            State::GameOver
         }
     }
 
@@ -105,16 +103,16 @@ pub mod engine {
         let move_success = game.playfield.move_active(playfield::Dir::Down);
 
         if move_success {
-            State::ActiveTetro
+            State::FallingPhase
         } else {
             game.playfield.place_active();
-            State::Dropped
+            State::CompletionPhase
         }
     }
 
     pub fn calculate_frame(game: &mut Game, event: Event) {
         match game.state {
-            State::ActiveTetro => {
+            State::FallingPhase => {
                 if event == Event::Timeout {
                     if game.score.inc_frame_counter() {
                         game.state = move_down(game);
@@ -144,17 +142,14 @@ pub mod engine {
                     };
                 }
             },
-            State::Touched => {
-                game.state = State::Dropped;
-            },
-            State::Dropped => {
+            State::CompletionPhase => {
                 if event == Event::Timeout {
                     let removed = game.playfield.remove_filled();
                     game.score.update(removed);
                     game.state = create_new_tetro(game);
                 }
             },
-            State::End => {
+            State::GameOver => {
                 /* do nothing for now */
             }
         }
