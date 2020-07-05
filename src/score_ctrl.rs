@@ -1,5 +1,6 @@
 use crate::updateable_view::{UpdatableView, Ctrl};
 use crate::view::{View, ShowArgs};
+use crate::engine::engine::{Storable};
 use std::cmp;
 
 pub struct ScoreCtrl {
@@ -30,10 +31,10 @@ impl ScoreCtrl {
         line_coeff * (level as u32 + 1)
     }
 
-    pub fn update(self: &mut Self, lines_cleared: u8) {
-        self.lines_cleared += lines_cleared as u32;
+    pub fn update(self: &mut Self, lines: &dyn Storable) {
+        self.lines_cleared += lines.count() as u32;
         self.level = cmp::max(self.level, (self.lines_cleared / 10) as i8);
-        self.score += ScoreCtrl::score_increment(self.level, lines_cleared);
+        self.score += ScoreCtrl::score_increment(self.level, lines.count() as u8);
         self.view.update();
     }
 

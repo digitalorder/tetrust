@@ -2,6 +2,7 @@ use crate::updateable_view::{UpdatableView, Ctrl};
 use crate::playfield::{Playfield, FieldTetrimino, Dir, HEIGHT};
 use crate::figures::figures::{Shape};
 use crate::view::{View, ShowArgs};
+use crate::engine::engine::{LineStorage, Storable};
 
 pub struct PlayfieldCtrl {
     view: UpdatableView,
@@ -47,18 +48,19 @@ impl PlayfieldCtrl {
         self.active_tetro.tetro.shape.clone()
     }
 
-    pub fn remove_filled(self: &mut Self) -> u8 {
-        let mut result = 0;
+    pub fn remove_filled(self: &mut Self, lines: &mut LineStorage) {
+        for l in lines {
+            self.playfield.delete_row(l);
+            self.view.update();
+        }
+    }
 
+    pub fn find_filled(self: &mut Self, found: &mut dyn Storable) {
         for r in (0..HEIGHT).rev() {
             if self.playfield.row_filled(r) {
-                result += 1;
-                self.playfield.delete_row(r);
-                self.view.update();
+                found.store(r);
             }
         }
-
-        result
     }
 
     pub fn new(playfield: Playfield, no_ghost: bool) -> Self {
