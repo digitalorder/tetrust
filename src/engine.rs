@@ -19,6 +19,7 @@ pub mod engine {
         FallingPhase,
         LockedPhase,
         PatternPhase,
+        EliminatePhase,
         GameOver,
     }
 
@@ -30,6 +31,7 @@ pub mod engine {
                 State::GameOver => "gameover",
                 State::LockedPhase => "locked",
                 State::PatternPhase => "pattern",
+                State::EliminatePhase => "eliminate",
             };
 
             write!(f, "{}", result)
@@ -220,13 +222,19 @@ pub mod engine {
                 if event == Event::Timeout || event == Event::Reschedule {
                     game.playfield.place_active();
                     game.playfield.find_filled(&mut game.removed);
+                    game.state = State::EliminatePhase;
+                    reschedule = true;
+                }
+            },
+            State::EliminatePhase => {
+                if event == Event::Timeout || event == Event::Reschedule {
+                    game.playfield.remove_filled(&mut game.removed);
                     game.state = State::CompletionPhase;
                     reschedule = true;
                 }
-            }
+            },
             State::CompletionPhase => {
                 if event == Event::Timeout || event == Event::Reschedule {
-                    game.playfield.remove_filled(&mut game.removed);
                     game.score.update(&game.removed);
                     game.removed.reset();
                     game.state = create_new_tetro(game);
