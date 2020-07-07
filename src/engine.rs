@@ -157,10 +157,6 @@ pub mod engine {
         }
     }
 
-    fn is_user_move(event: Event) -> bool {
-        event == Event::KeyLeft || event == Event::KeyRight || event == Event::KeyTurn || event == Event::KeyDown || event == Event::KeyDrop || event == Event::KeyHold
-    }
-
     fn handle_user_move(game: &mut Game, event: Event) -> State {
         let (move_success, fall_space) =
             if event == Event::KeyDown {
@@ -198,52 +194,45 @@ pub mod engine {
 
     pub fn calculate_frame(game: &mut Game, event: Event) -> bool {
         let mut reschedule = false;
+        let event = if event == Event::Timeout {
+            if game.score.inc_frame_counter() {
+                Event::KeyDown
+            } else {
+                Event::Timeout
+            }
+        } else { event };
+
         match game.state {
             State::FallingPhase => {
-                if event == Event::Timeout {
-                    if game.score.inc_frame_counter() {
-                        game.state = handle_user_move(game, Event::KeyDown);
-                    }
-                } else if is_user_move(event.clone()) {
-                    game.state = handle_user_move(game, event);
-               }
+                game.state = handle_user_move(game, event);
             },
             State::LockedPhase => {
-                if event == Event::Timeout {
-                    if game.score.inc_frame_counter() {
-                        game.state = State::PatternPhase;
-                        reschedule = true;
-                    }
-                } else if is_user_move(event.clone()) {
-                    game.state = handle_user_move(game, event);
+                game.state = handle_user_move(game, event);
+                if game.state == State::PatternPhase {
+                    reschedule = true;
                 }
             },
             State::PatternPhase => {
-                if event == Event::Timeout || event == Event::Reschedule {
-                    game.playfield.place_active();
-                    game.playfield.find_filled(&mut game.removed);
-                    game.state = State::EliminatePhase;
-                    reschedule = true;
-                }
+                game.playfield.place_active();
+                game.playfield.find_filled(&mut game.removed);
+                game.state = State::EliminatePhase;
+                reschedule = true;
             },
             State::EliminatePhase => {
-                if event == Event::Timeout || event == Event::Reschedule {
-                    game.playfield.remove_filled(&mut game.removed);
-                    game.state = State::CompletionPhase;
-                    reschedule = true;
-                }
+                game.playfield.remove_filled(&mut game.removed);
+                game.state = State::CompletionPhase;
+                reschedule = true;
             },
             State::CompletionPhase => {
-                if event == Event::Timeout || event == Event::Reschedule {
-                    game.score.update(&game.removed);
-                    game.removed.reset();
-                    game.state = create_new_tetro(game);
-                }
+                game.score.update(&game.removed);
+                game.removed.reset();
+                game.state = create_new_tetro(game);
             },
             State::GameOver => {
                 /* do nothing for now */
             }
         }
+        // print!("{}Event: {} {} ", termion::cursor::Goto(1, 1), event_copy, game.state);
         reschedule
     }
 }
