@@ -194,13 +194,12 @@ pub mod engine {
 
     pub fn calculate_frame(game: &mut Game, event: Event) -> bool {
         let mut reschedule = false;
-        let event = if event == Event::Timeout {
-            if game.score.inc_frame_counter() {
-                Event::KeyDown
-            } else {
-                Event::Timeout
-            }
-        } else { event };
+        /* replace timeout drop with KeyDown event to simplify further handling */
+        let event = if event == Event::Timeout && game.score.inc_frame_counter() {
+            Event::KeyDown
+        } else {
+            event
+        };
 
         match game.state {
             State::FallingPhase => {
