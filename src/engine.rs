@@ -195,17 +195,14 @@ pub mod engine {
     pub fn calculate_frame(game: &mut Game, event: Event) -> bool {
         let mut reschedule = false;
         /* replace timeout drop with KeyDown event to simplify further handling */
-        let event = if event == Event::Timeout && game.score.inc_frame_counter() {
-            Event::KeyDown
-        } else {
-            event
-        };
-
         match game.state {
-            State::FallingPhase => {
-                game.state = handle_user_move(game, event);
-            },
-            State::LockedPhase => {
+            State::FallingPhase | State::LockedPhase => {
+                let event = if event == Event::Timeout && game.score.inc_frame_counter() {
+                    Event::KeyDown
+                } else {
+                    event
+                };
+
                 game.state = handle_user_move(game, event);
                 if game.state == State::PatternPhase {
                     reschedule = true;
