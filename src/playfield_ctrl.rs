@@ -2,13 +2,44 @@ use crate::updateable_view::{UpdatableView, Ctrl};
 use crate::playfield::{Playfield, FieldTetrimino, Dir, HEIGHT};
 use crate::figures::figures::{Shape};
 use crate::view::{View, ShowArgs};
-use crate::engine::engine::{LineStorage, Storable};
 
 pub struct PlayfieldCtrl {
     view: UpdatableView,
     playfield: Playfield,
     no_ghost: bool,
     active_tetro: FieldTetrimino,
+    filled_lines: LineStorage,
+}
+
+pub trait Storable {
+    fn store(self: &mut Self, row: i8);
+    fn elements(self: &Self) -> &[i8];
+    fn reset(self: &mut Self);
+}
+
+pub struct LineStorage {
+    lines: [i8; 4],
+    write_index: usize,
+    read_index: usize,
+}
+
+impl Storable for LineStorage {
+    fn store(self: &mut Self, row: i8) {
+        assert_ne!(self.write_index, self.lines.len());
+        self.lines[self.write_index] = row;
+        self.write_index += 1;
+    }
+
+    fn reset(self: &mut Self) { self.write_index = 0; }
+    fn elements(self: &Self) -> &[i8] {
+        &self.lines[self.read_index..self.write_index]
+    }
+}
+
+impl Default for LineStorage {
+    fn default() -> LineStorage {
+        LineStorage{lines: [0, 0, 0, 0], write_index: 0, read_index: 0}
+    }
 }
 
 impl PlayfieldCtrl {
@@ -48,17 +79,20 @@ impl PlayfieldCtrl {
         self.active_tetro.tetro.shape.clone()
     }
 
-    pub fn remove_filled(self: &mut Self, lines: &mut LineStorage) {
-        for l in lines {
-            self.playfield.delete_row(l);
+    pub fn remove_filled(self: &mut Self) -> usize {
+        let removed_lines = self.filled_lines.elements().len();
+        for l in self.filled_lines.elements() {
+            self.playfield.delete_row(*l);
             self.view.update();
         }
+        self.filled_lines.reset();
+        removed_lines
     }
 
-    pub fn find_filled(self: &mut Self, found: &mut dyn Storable) {
+    pub fn find_filled(self: &mut Self) {
         for r in (0..HEIGHT).rev() {
             if self.playfield.row_filled(r) {
-                found.store(r);
+                self.filled_lines.store(r);
             }
         }
     }
@@ -69,6 +103,7 @@ impl PlayfieldCtrl {
             view: UpdatableView::default(),
             no_ghost: no_ghost,
             active_tetro: FieldTetrimino::default(),
+            filled_lines: LineStorage::default(),
         }
     }
 }
@@ -88,5 +123,45 @@ impl Ctrl for PlayfieldCtrl {
                                 active_tetro: &self.active_tetro,
                                 ghost_tetro: &ghost_tetro
                              });
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::panic;
+
+    #[test]
+    fn line_storage_zero_on_creation() {
+        let line_storage = LineStorage::default();
+        assert_eq!(line_storage.elements().len(), 0);
+    }
+
+    #[test]
+    fn line_storage_count_one() {
+        let mut line_storage = LineStorage::default();
+        line_storage.store(0);
+        assert_eq!(line_storage.elements().len(), 1);
+        assert_eq!(line_storage.elements()[0], 0);
+    }
+
+    #[test]
+    fn line_storage_count_two() {
+        let mut line_storage = LineStorage::default();
+        line_storage.store(0);
+        line_storage.store(1);
+        assert_eq!(line_storage.elements().len(), 2);
+        assert_eq!(line_storage.elements()[0], 0);
+        assert_eq!(line_storage.elements()[1], 1);
+    }
+
+    #[test]
+    fn line_storage_access_not_set() {
+        let mut line_storage = LineStorage::default();
+        line_storage.store(0);
+        let result = panic::catch_unwind(|| {
+            let _ = line_storage.elements()[2];
+        });
+        assert!(result.is_err());
     }
 }

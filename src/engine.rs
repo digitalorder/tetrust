@@ -68,61 +68,12 @@ pub mod engine {
         }
     }
 
-    pub trait Storable {
-        fn store(self: &mut Self, row: i8);
-        fn count(self: &Self) -> usize;
-        fn reset(self: &mut Self);
-    }
-
-    pub struct LineStorage {
-        lines: [i8; 4],
-        write_index: usize,
-        read_index: usize,
-    }
-
-    impl Storable for LineStorage {
-        fn store(self: &mut Self, row: i8) {
-            assert_ne!(self.write_index, self.lines.len());
-            self.lines[self.write_index] = row;
-            self.write_index += 1;
-        }
-
-        fn count(self: &Self) -> usize { self.write_index }
-        fn reset(self: &mut Self) { self.write_index = 0; }
-    }
-
-    impl Iterator for LineStorage {
-        type Item = i8;
-
-        fn next(&mut self) -> Option<Self::Item> {
-            if self.read_index == self.lines.len() {
-                self.read_index = 0;
-                return None;
-            }
-            let result = self.lines[self.read_index];
-            self.read_index += 1;
-            if self.read_index > self.write_index {
-                self.read_index = 0;
-                None
-            } else {
-                Some(result)
-            }
-        }
-    }
-
-    impl Default for LineStorage {
-        fn default() -> LineStorage {
-            LineStorage{lines: [0, 0, 0, 0], write_index: 0, read_index: 0}
-        }
-    }
-
     pub struct Game {
         playfield: PlayfieldCtrl,
         state: State,
         next_tetro: NextTetroCtrl,
         static_ctrl: StaticCtrl,
         score: ScoreCtrl,
-        removed: LineStorage,
     }
 
     pub fn new_game(config: Config, playfield: playfield::Playfield) -> Game {
@@ -132,7 +83,6 @@ pub mod engine {
             next_tetro: NextTetroCtrl::new(),
             score: ScoreCtrl::new(config.level as i8),
             state: State::CompletionPhase,
-            removed: LineStorage::default(),
         }
     }
 
@@ -211,11 +161,10 @@ pub mod engine {
             },
             State::CompletionPhase => {
                 /* elimimination phase */
-                game.playfield.find_filled(&mut game.removed);
-                game.playfield.remove_filled(&mut game.removed);
+                game.playfield.find_filled();
+                let removed_rows_count = game.playfield.remove_filled();
                 /* completion phase */
-                game.score.update(&game.removed);
-                game.removed.reset();
+                game.score.update(removed_rows_count as u8);
                 game.state = create_new_tetro(game);
             },
             State::GameOver => {
@@ -224,41 +173,5 @@ pub mod engine {
         }
         // print!("{}Event: {} {} ", termion::cursor::Goto(1, 1), event_copy, game.state);
         reschedule
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::engine::*;
-
-    #[test]
-    fn line_storage_zero_on_creation() {
-        let line_storage = LineStorage::default();
-        assert_eq!(line_storage.count(), 0);
-    }
-
-    #[test]
-    fn line_storage_count_one() {
-        let mut line_storage = LineStorage::default();
-        line_storage.store(0);
-        assert_eq!(line_storage.count(), 1);
-    }
-
-    #[test]
-    fn line_storage_count_two() {
-        let mut line_storage = LineStorage::default();
-        line_storage.store(0);
-        line_storage.store(1);
-        assert_eq!(line_storage.count(), 2);
-    }
-
-    #[test]
-    fn line_storage_iterate_with_next() {
-        let mut line_storage = LineStorage::default();
-        line_storage.store(0);
-        line_storage.store(1);
-        assert_eq!(line_storage.next(), Some(0));
-        assert_eq!(line_storage.next(), Some(1));
-        assert_eq!(line_storage.next(), None);
     }
 }
