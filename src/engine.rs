@@ -158,19 +158,16 @@ pub mod engine {
     }
 
     fn handle_user_move(game: &mut Game, event: Event) -> State {
-        let (move_success, fall_space) =
-            if event == Event::KeyDown {
-                game.playfield.move_active(playfield::Dir::Down)
-            } else if event == Event::KeyLeft {
-                game.playfield.move_active(playfield::Dir::Left)
-            } else if event == Event::KeyRight {
-                game.playfield.move_active(playfield::Dir::Right)
-            } else if event == Event::KeyTurn {
-                game.playfield.turn_active()
-            } else if event == Event::KeyDrop {
+        let (move_success, fall_space) = match event {
+            Event::KeyDown => game.playfield.move_active(playfield::Dir::Down),
+            Event::KeyLeft => game.playfield.move_active(playfield::Dir::Left),
+            Event::KeyRight => game.playfield.move_active(playfield::Dir::Right),
+            Event::KeyTurn => game.playfield.turn_active(),
+            Event::KeyDrop => {
                 while game.playfield.move_active(playfield::Dir::Down) == (true, true) {};
                 game.playfield.move_active(playfield::Dir::Down)
-            } else if event == Event::KeyHold {
+            },
+            Event::KeyHold => {
                 let active_shape = game.playfield.active_shape();
 
                 match game.next_tetro.swap(active_shape) {
@@ -178,9 +175,9 @@ pub mod engine {
                     _ => /* do nothing */{},
                 };
                 (true, true)
-            } else {
-                (true, true)
-            };
+            },
+            _ => (true, true),
+        };
 
         if !move_success && event == Event::KeyDown {
             State::PatternPhase
