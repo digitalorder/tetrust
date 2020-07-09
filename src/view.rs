@@ -23,6 +23,18 @@ const NEXT_TETRO_BASE_COL: i8 = 26;
 const SCORE_BASE_ROW: u16 = 2;
 const SCORE_BASE_COL: u16 = 26;
 
+macro_rules! rgb_color {
+    ($r:expr,$g:expr,$b:expr) => {
+        termion::color::AnsiValue(16 + 36 * $r + 6 * $g + $b);
+    };
+}
+
+macro_rules! shape_and_color {
+    ($shape:expr, $active:expr, $stat:expr) => {
+        ColorTable{shape: $shape, active_color: $active, static_color: $stat}
+    };
+}
+
 impl View for ConsoleView {
     fn show_subview(self: &Self, args: &ShowArgs) {
         match args {
@@ -83,18 +95,6 @@ struct ColorTable {
     shape: Shape,
     active_color: termion::color::AnsiValue,
     static_color: termion::color::AnsiValue,
-}
-
-macro_rules! rgb_color {
-    ($r:expr,$g:expr,$b:expr) => {
-        termion::color::AnsiValue(16 + 36 * $r + 6 * $g + $b);
-    };
-}
-
-macro_rules! shape_and_color {
-    ($shape:expr, $active:expr, $stat:expr) => {
-        ColorTable{shape: $shape, active_color: $active, static_color: $stat}
-    };
 }
 
 static COLOR_TABLE: &'static [ColorTable] = &[
