@@ -19,6 +19,7 @@ pub mod engine {
         FallingPhase,
         LockedPhase,
         PatternPhase,
+        AnimationPhase,
         /* Eliminate Phase is subphase of Completion */
         GameOver,
     }
@@ -31,6 +32,7 @@ pub mod engine {
                 State::GameOver => "gameover",
                 State::LockedPhase => "locked",
                 State::PatternPhase => "pattern",
+                State::AnimationPhase => "animation",
             };
 
             write!(f, "{}", result)
@@ -156,12 +158,20 @@ pub mod engine {
             },
             State::PatternPhase => {
                 game.playfield.place_active();
-                game.state = State::CompletionPhase;
+                game.playfield.start_animation();
+                game.state = State::AnimationPhase;
                 reschedule = true;
+            },
+            State::AnimationPhase => {
+                if event == Event::Timeout {
+                    if !game.playfield.animate() {
+                        game.state = State::CompletionPhase;
+                        reschedule = true;
+                    }
+                }
             },
             State::CompletionPhase => {
                 /* elimimination phase */
-                game.playfield.find_filled();
                 let removed_rows_count = game.playfield.remove_filled();
                 /* completion phase */
                 game.score.update(removed_rows_count as u8);

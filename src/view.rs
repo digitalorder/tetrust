@@ -1,5 +1,6 @@
 use crate::playfield::{Playfield, FieldTetrimino, WIDTH, HEIGHT, Coords, ShapeAt, ShapeAtType};
 use crate::figures::figures::{Shape, Tetrimino, LAYOUT_HEIGHT, LAYOUT_WIDTH};
+use crate::playfield_ctrl::{Storable};
 use std::io::{stdout, Write};
 use termion::raw::IntoRawMode;
 extern crate termion;
@@ -7,7 +8,11 @@ extern crate termion;
 pub type Row = [char; WIDTH as usize];
 pub enum ShowArgs<'a> {
     StaticArgs,
-    PlayfieldArgs{playfield: &'a Playfield, active_tetro: &'a FieldTetrimino, ghost_tetro: &'a FieldTetrimino},
+    PlayfieldArgs{playfield: &'a Playfield,
+                  active_tetro: &'a FieldTetrimino,
+                  ghost_tetro: &'a FieldTetrimino,
+                  selected_lines: &'a dyn Storable,
+                 },
     ScoreArgs{level: i8, score: u32, lines: u32},
     NextTetroArgs{next: Shape},
 }
@@ -48,12 +53,17 @@ impl View for ConsoleView {
                 draw_rectangle(&Coords{row: 2, col: 1}, HEIGHT, WIDTH * 2);
                 draw_rectangle(&Coords{row: NEXT_TETRO_BASE_ROW, col: NEXT_TETRO_BASE_COL}, LAYOUT_HEIGHT, LAYOUT_WIDTH * 2);
             },
-            ShowArgs::PlayfieldArgs{playfield, active_tetro, ghost_tetro} => {
+            ShowArgs::PlayfieldArgs{playfield, active_tetro, ghost_tetro, selected_lines} => {
                 for row in 0..HEIGHT {
                     print!("{}", termion::cursor::Goto(2, 3 + (row as u16)));
                     for col in 0..WIDTH {
-                        let shape_at = playfield.shape_at(&Coords{row: HEIGHT - row - 1, col: col as i8}, active_tetro, ghost_tetro);
-                        let color = convert_to_color(shape_at);
+                        let row = HEIGHT - row - 1;
+                        let color = if selected_lines.elements().contains(&row) {
+                            rgb_color!(5, 5, 5)
+                        } else {
+                            let shape_at = playfield.shape_at(&Coords{row: row, col: col as i8}, active_tetro, ghost_tetro);
+                            convert_to_color(shape_at)
+                        };
                         print!("{}  {}", termion::color::Bg(color), termion::color::Bg(termion::color::Black));
                     }
                 }

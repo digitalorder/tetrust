@@ -9,6 +9,8 @@ pub struct PlayfieldCtrl {
     no_ghost: bool,
     active_tetro: FieldTetrimino,
     filled_lines: LineStorage,
+    animation_frame: u32,
+    is_animating: bool
 }
 
 pub trait Storable {
@@ -17,6 +19,7 @@ pub trait Storable {
     fn reset(self: &mut Self);
 }
 
+#[derive(Clone)]
 pub struct LineStorage {
     lines: [i8; 4],
     write_index: usize,
@@ -89,12 +92,23 @@ impl PlayfieldCtrl {
         removed_lines
     }
 
-    pub fn find_filled(self: &mut Self) {
+    fn find_filled(self: &mut Self) {
         for r in (0..HEIGHT).rev() {
             if self.playfield.row_filled(r) {
                 self.filled_lines.store(r);
             }
         }
+    }
+
+    pub fn start_animation(self: &mut Self) {
+        self.find_filled();
+        self.animation_frame = 0;
+        self.is_animating = self.filled_lines.elements().len() > 0;
+    }
+
+    pub fn animate(self: &mut Self) -> bool {
+        self.view.update();
+        self.is_animating
     }
 
     pub fn new(playfield: Playfield, no_ghost: bool) -> Self {
@@ -104,6 +118,8 @@ impl PlayfieldCtrl {
             no_ghost: no_ghost,
             active_tetro: FieldTetrimino::default(),
             filled_lines: LineStorage::default(),
+            animation_frame: 0,
+            is_animating: false,
         }
     }
 }
@@ -118,10 +134,21 @@ impl Ctrl for PlayfieldCtrl {
             ghost_tetro
         };
 
+        let selected_lines = if self.is_animating && self.animation_frame % 30 > 15 {
+            LineStorage::default()
+        } else {
+            self.filled_lines.clone()
+        };
+        self.animation_frame += 1;
+        if self.animation_frame == 60 {
+            self.is_animating = false;
+        }
+
         self.view.show(view, &ShowArgs::PlayfieldArgs{
                                 playfield: &self.playfield,
                                 active_tetro: &self.active_tetro,
-                                ghost_tetro: &ghost_tetro
+                                ghost_tetro: &ghost_tetro,
+                                selected_lines: &selected_lines,
                              });
     }
 }
