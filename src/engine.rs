@@ -115,8 +115,9 @@ pub mod engine {
             Event::KeyRight => game.playfield.move_active(playfield::Dir::Right),
             Event::KeyTurn => game.playfield.turn_active(),
             Event::KeyDrop => {
-                while game.playfield.move_active(playfield::Dir::Down) == (true, true) {};
-                game.playfield.move_active(playfield::Dir::Down)
+                let (move_success, _) = game.playfield.move_active(playfield::Dir::Down);
+                while game.playfield.move_active(playfield::Dir::Down) == (true, true || false) {};
+                (move_success, false)
             },
             Event::KeyHold => {
                 let active_shape = game.playfield.active_shape();
