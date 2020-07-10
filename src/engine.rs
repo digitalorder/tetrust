@@ -6,6 +6,7 @@ pub mod engine {
     use crate::next_tetro_ctrl::{NextTetroCtrl};
     use crate::static_ctrl::{StaticCtrl};
     use crate::updateable_view::Ctrl;
+    use crate::fall::{Fall};
     use std::fmt;
 
     pub struct Config {
@@ -76,6 +77,7 @@ pub mod engine {
         next_tetro: NextTetroCtrl,
         static_ctrl: StaticCtrl,
         score: ScoreCtrl,
+        fall: Fall,
     }
 
     pub fn new_game(config: Config, playfield: playfield::Playfield) -> Game {
@@ -85,6 +87,7 @@ pub mod engine {
             next_tetro: NextTetroCtrl::new(),
             score: ScoreCtrl::new(config.level as i8),
             state: State::CompletionPhase,
+            fall: Fall::new(),
         }
     }
 
@@ -134,7 +137,7 @@ pub mod engine {
         if !move_success && event == Event::KeyDown {
             State::PatternPhase
         } else if move_success && !fall_space {
-            game.score.lock_delay();
+            game.fall.lock_delay();
             State::LockedPhase
         } else {
             State::FallingPhase
@@ -146,7 +149,7 @@ pub mod engine {
         /* replace timeout drop with KeyDown event to simplify further handling */
         match game.state {
             State::FallingPhase | State::LockedPhase => {
-                let event = if event == Event::Timeout && game.score.inc_frame_counter() {
+                let event = if event == Event::Timeout && game.fall.inc_frame_counter(game.score.level) {
                     Event::KeyDown
                 } else {
                     event
@@ -177,12 +180,12 @@ pub mod engine {
                 /* completion phase */
                 game.score.update(removed_rows_count as u8);
                 game.state = create_new_tetro(game);
+                game.fall.reset();
             },
             State::GameOver => {
                 /* do nothing for now */
             }
         }
-        // print!("{}Event: {} {} ", termion::cursor::Goto(1, 1), event_copy, game.state);
         reschedule
     }
 }

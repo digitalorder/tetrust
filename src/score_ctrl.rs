@@ -4,8 +4,7 @@ use std::cmp;
 
 pub struct ScoreCtrl {
     view: UpdatableView,
-    frame_counter: i8,
-    level: i8,
+    pub level: i8,
     score: u32,
     lines_cleared: u32,
 }
@@ -37,39 +36,12 @@ impl ScoreCtrl {
         self.view.update();
     }
 
-    fn max_frame_count(level: i8) -> i8 {
-        match level {
-            0..=8 => 48 - 5 * level,
-            9 => 6,
-            10..=12 => 5,
-            13..=15 => 4,
-            16..=18 => 3,
-            19..=28 => 2,
-            _ => 1
-        }
-    }
-
-    pub fn inc_frame_counter(self: &mut Self) -> bool {
-        self.frame_counter += 1;
-        if self.frame_counter >= ScoreCtrl::max_frame_count(self.level) {
-            self.frame_counter = 0;
-            true
-        } else {
-            false
-        }
-    }
-
-    pub fn lock_delay(self: &mut Self) {
-        self.frame_counter = ScoreCtrl::max_frame_count(self.level) - 30;
-    }
-
     pub fn new(level: i8) -> Self {
         ScoreCtrl {
             view: UpdatableView::default(),
             level: if level < 29 { level as i8 } else { 29 },
             score: 0,
             lines_cleared: 0,
-            frame_counter: 0,
         }
     }
 }

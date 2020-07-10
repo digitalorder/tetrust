@@ -2,6 +2,7 @@ use crate::updateable_view::{UpdatableView, Ctrl};
 use crate::playfield::{Playfield, FieldTetrimino, Dir, HEIGHT};
 use crate::figures::figures::{Shape};
 use crate::view::{View, ShowArgs};
+use crate::fall::{FRAME_RATE};
 
 pub struct PlayfieldCtrl {
     view: UpdatableView,
@@ -134,13 +135,15 @@ impl Ctrl for PlayfieldCtrl {
             ghost_tetro
         };
 
-        let selected_lines = if self.is_animating && self.animation_frame % 30 > 15 {
+        let selected_lines = if self.is_animating && self.animation_frame % (FRAME_RATE / 2) > (FRAME_RATE / 4) {
+            /* do not select lines in interval between 0.25..0.5 second */
             LineStorage::default()
         } else {
+            /* select lines in interval between 0..0.25 second */
             self.filled_lines.clone()
         };
         self.animation_frame += 1;
-        if self.animation_frame == 60 {
+        if self.animation_frame == FRAME_RATE {
             self.is_animating = false;
         }
 

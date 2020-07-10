@@ -1,6 +1,7 @@
 use tetrust::engine::engine;
 use tetrust::view;
 use tetrust::playfield;
+use tetrust::fall::FRAME_RATE;
 use std::thread;
 use std::time::Duration;
 use std::sync::mpsc;
@@ -20,7 +21,7 @@ fn do_game(no_ghost: bool, level: u8) {
 
     thread::spawn(move || {
         /* timeout generator */
-        const FRAME_INTERVAL: u64 = 1000000 / 60;
+        const FRAME_INTERVAL: u64 = 1000000 / FRAME_RATE as u64;
 
         loop {
             let _ = timer_tx.send(engine::Event::Timeout);
