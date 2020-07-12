@@ -1,6 +1,7 @@
 use crate::playfield::{Playfield, FieldTetrimino, WIDTH, HEIGHT, Coords, ShapeAt, ShapeAtType};
 use crate::figures::figures::{Shape, Tetrimino, LAYOUT_HEIGHT, LAYOUT_WIDTH};
 use crate::playfield_ctrl::{Storable};
+use crate::next_tetro_ctrl::{PREVIEW_SIZE};
 use std::io::{stdout, Write};
 use termion::raw::IntoRawMode;
 extern crate termion;
@@ -14,7 +15,7 @@ pub enum ShowArgs<'a> {
                   selected_lines: &'a dyn Storable,
                  },
     ScoreArgs{level: i8, score: u32, lines: u32},
-    NextTetroArgs{next: Shape},
+    NextTetroArgs{next: &'a [Shape]},
 }
 
 pub trait View {
@@ -51,7 +52,7 @@ impl View for ConsoleView {
                 print!("{}Move: ⬅️ ⬇️ ➡️  Rotate: ⬆️  Drop: Spacebar. Hold: h. Exit: q\n\r",
                        termion::cursor::Goto(1, 1));
                 draw_rectangle(&Coords{row: 2, col: 1}, HEIGHT, WIDTH * 2);
-                draw_rectangle(&Coords{row: NEXT_TETRO_BASE_ROW, col: NEXT_TETRO_BASE_COL}, LAYOUT_HEIGHT, LAYOUT_WIDTH * 2);
+                draw_rectangle(&Coords{row: NEXT_TETRO_BASE_ROW, col: NEXT_TETRO_BASE_COL}, LAYOUT_HEIGHT * PREVIEW_SIZE as i8, LAYOUT_WIDTH * 2);
             },
             ShowArgs::PlayfieldArgs{playfield, active_tetro, ghost_tetro, selected_lines} => {
                 for row in 0..HEIGHT {
@@ -71,11 +72,13 @@ impl View for ConsoleView {
                 print!("{}", termion::cursor::Goto(1, HEIGHT as u16 + 4));
             },
             ShowArgs::NextTetroArgs{next} => {
-                for (coords, shape) in Tetrimino::new(next.clone()) {
-                    let color = convert_to_color(ShapeAt{shape: shape, shape_at_type: ShapeAtType::Static});
-                    print!("{}{}  {}", termion::cursor::Goto((NEXT_TETRO_BASE_COL + 1 + coords.col * 2) as u16,
-                                                             (NEXT_TETRO_BASE_ROW + 1 + coords.row) as u16),
-                                       termion::color::Bg(color), termion::color::Bg(termion::color::Black));
+                for (index, item) in next.iter().enumerate() {
+                    for (coords, shape) in Tetrimino::new(item.clone()) {
+                        let color = convert_to_color(ShapeAt{shape: shape, shape_at_type: ShapeAtType::Static});
+                        print!("{}{}  {}", termion::cursor::Goto((NEXT_TETRO_BASE_COL + 1 + coords.col * 2) as u16,
+                                                                 (NEXT_TETRO_BASE_ROW + 1 + coords.row + index as i8 * 4) as u16),
+                                           termion::color::Bg(color), termion::color::Bg(termion::color::Black));
+                    }
                 }
             }
         };

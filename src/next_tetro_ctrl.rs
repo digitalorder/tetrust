@@ -5,9 +5,12 @@ use crate::playfield::{FieldTetrimino, Coords, HEIGHT, WIDTH};
 use rand::{thread_rng};
 use rand::seq::SliceRandom;
 
+pub const PREVIEW_SIZE: usize = 4;
+const DRAW_SIZE: usize = 7;
+
 pub struct NextTetroCtrl {
     view: UpdatableView,
-    bag: [Shape; 7],
+    bag: [Shape; DRAW_SIZE * 2],
     bag_index: usize,
     pushed_flag: bool,
 }
@@ -15,22 +18,26 @@ pub struct NextTetroCtrl {
 pub struct AlreadyPushed;
 
 impl NextTetroCtrl {
-    fn get_current_shape(self: &Self) -> Shape {
-        self.bag[self.bag_index].clone()
+    fn get_current_shape(self: &Self) -> &[Shape] {
+        &self.bag[self.bag_index..self.bag_index + PREVIEW_SIZE]
     }
 
     fn draw_next(self: &mut Self) {
-        if self.bag_index < self.bag.len() - 1 {
+        if self.bag_index < DRAW_SIZE - 1 {
             self.bag_index += 1;
         } else {
-            self.bag = NextTetroCtrl::shuffle_bag();
+            let new_draw = NextTetroCtrl::shuffle_bag();
+            for i in 0..DRAW_SIZE {
+                self.bag[i] = self.bag[i + DRAW_SIZE].clone();
+                self.bag[i + DRAW_SIZE] = new_draw[i].clone();
+            }
             self.bag_index = 0;
         };
         self.pushed_flag = false;
     }
 
     pub fn pop(self: &mut Self) -> FieldTetrimino {
-        let shape = self.get_current_shape();
+        let shape = self.get_current_shape()[0].clone();
         self.draw_next();
         let coords = match shape {
             Shape::LShape | Shape::TShape | Shape::JShape => Coords{row: HEIGHT, col: WIDTH / 2 - 2},
@@ -53,7 +60,7 @@ impl NextTetroCtrl {
         if self.bag_index > 0 {
             self.bag_index -= 1;
         } else {
-            self.bag_index = self.bag.len() - 1;
+            self.bag_index = DRAW_SIZE - 1;
         }
         self.bag[self.bag_index] = shape;
         self.pushed_flag = true;
@@ -71,9 +78,17 @@ impl NextTetroCtrl {
     }
 
     pub fn new() -> Self {
+        let mut bag: [Shape; DRAW_SIZE * 2] = Default::default();
+        /* do two shuffles and put them immediately inside bag */
+        let shuffle = NextTetroCtrl::shuffle_bag();
+        let shuffle2 = NextTetroCtrl::shuffle_bag();
+        for i in 0..shuffle.len() {
+            bag[i] = shuffle[i].clone();
+            bag[i + DRAW_SIZE] = shuffle2[i].clone();
+        }
         NextTetroCtrl{
             view: UpdatableView::default(),
-            bag: NextTetroCtrl::shuffle_bag(),
+            bag: bag,
             bag_index: 0,
             pushed_flag: false
         }
@@ -82,6 +97,9 @@ impl NextTetroCtrl {
 
 impl Ctrl for NextTetroCtrl {
     fn show(self: &mut Self, view: &impl View) {
-        self.view.show(view, &ShowArgs::NextTetroArgs{next: self.get_current_shape()});
+        /* todo: eliminate additional copy. It is necessary because self.view is mutable borrow */
+        let mut next: [Shape; PREVIEW_SIZE] = Default::default();
+        next.clone_from_slice(self.get_current_shape());
+        self.view.show(view, &ShowArgs::NextTetroArgs{next: &next});
     }
 }
