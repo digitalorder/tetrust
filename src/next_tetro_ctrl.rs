@@ -7,10 +7,11 @@ use rand::seq::SliceRandom;
 
 pub const PREVIEW_SIZE: usize = 4;
 const DRAW_SIZE: usize = 7;
+const BAG_SIZE: usize = DRAW_SIZE * 2;
 
 pub struct NextTetroCtrl {
     view: UpdatableView,
-    bag: [Shape; DRAW_SIZE * 2],
+    bag: [Shape; BAG_SIZE],
     bag_index: usize,
     pushed_flag: bool,
 }
@@ -69,6 +70,7 @@ impl NextTetroCtrl {
         self.pushed_flag = true;
     }
 
+    /* Produce new rearrangement of 7-tetro bag */
     fn shuffle_bag() -> [Shape; DRAW_SIZE] {
         let mut rnd = thread_rng();
         let mut bag = [Shape::OShape, Shape::IShape,
@@ -81,7 +83,7 @@ impl NextTetroCtrl {
 
     pub fn new() -> Self {
         /* do two shuffles and put them immediately inside bag */
-        let mut bag: [Shape; DRAW_SIZE * 2] = Default::default();
+        let mut bag: [Shape; BAG_SIZE] = Default::default();
         bag[0..DRAW_SIZE].clone_from_slice(&NextTetroCtrl::shuffle_bag());
         bag[DRAW_SIZE..].clone_from_slice(&NextTetroCtrl::shuffle_bag());
         NextTetroCtrl{
