@@ -18,9 +18,6 @@ pub struct NextTetroCtrl {
 pub struct AlreadyPushed;
 
 impl NextTetroCtrl {
-    fn get_current_shape(self: &Self) -> &[Shape] {
-        &self.bag[self.bag_index..self.bag_index + PREVIEW_SIZE]
-    }
 
     fn draw_next(self: &mut Self) {
         if self.bag_index < DRAW_SIZE - 1 {
@@ -91,9 +88,8 @@ impl NextTetroCtrl {
 
 impl Ctrl for NextTetroCtrl {
     fn show(self: &mut Self, view: &impl View) {
-        /* todo: eliminate additional copy. It is necessary because self.view is mutable borrow */
-        let mut next: [Shape; PREVIEW_SIZE] = Default::default();
-        next.clone_from_slice(self.get_current_shape());
-        self.view.show(view, &ShowArgs::NextTetroArgs{next: &next});
+        self.view.show(view, &ShowArgs::NextTetroArgs{
+            next: &self.bag[self.bag_index..self.bag_index + PREVIEW_SIZE]
+        });
     }
 }
