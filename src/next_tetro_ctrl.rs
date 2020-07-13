@@ -18,32 +18,33 @@ pub struct NextTetroCtrl {
 pub struct AlreadyPushed;
 
 impl NextTetroCtrl {
-
-    fn draw_next(self: &mut Self) {
+    /* Consume next item in upcoming queue and fill in empty spaces if they occur */
+    fn draw_next(self: &mut Self) -> Shape {
+        let result = self.bag[self.bag_index].clone();
         if self.bag_index < DRAW_SIZE - 1 {
             self.bag_index += 1;
         } else {
+            /* used up current draw, time to generate a new one */
             let (left, right) = self.bag.split_at_mut(DRAW_SIZE);
             left.clone_from_slice(right);
             right.clone_from_slice(&NextTetroCtrl::shuffle_bag());
             self.bag_index = 0;
         };
         self.pushed_flag = false;
+        result
     }
 
+    /* Consume next item from upcoming queue and make a proper Tetrimino out of it */
     pub fn pop(self: &mut Self) -> FieldTetrimino {
-        let shape = self.get_current_shape()[0].clone();
-        self.draw_next();
-        let coords = match shape {
-            Shape::LShape | Shape::TShape | Shape::JShape => Coords{row: HEIGHT, col: WIDTH / 2 - 2},
-            _ => Coords{row: HEIGHT + 1, col: WIDTH / 2 - 2},
-        };
-        let tetro = FieldTetrimino{
-            coords: coords,
-            tetro: Tetrimino::new(shape),
-        };
         self.view.update();
-        tetro
+        let shape = self.draw_next();
+        FieldTetrimino{
+            coords: match shape {
+                Shape::LShape | Shape::TShape | Shape::JShape => Coords{row: HEIGHT, col: WIDTH / 2 - 2},
+                _ => Coords{row: HEIGHT + 1, col: WIDTH / 2 - 2},
+            },
+            tetro: Tetrimino::new(shape),
+        }
     }
 
     pub fn swap(self: &mut Self, shape: Shape) -> Result<(FieldTetrimino), AlreadyPushed> {
