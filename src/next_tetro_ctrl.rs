@@ -47,12 +47,19 @@ impl NextTetroCtrl {
         }
     }
 
+    /* Replace given shape with whatever is on top of upcoming queue */
     pub fn swap(self: &mut Self, shape: Shape) -> Result<(FieldTetrimino), AlreadyPushed> {
         if self.pushed_flag {
             return Err(AlreadyPushed{});
         }
 
         let popped = self.pop();
+        self.push(shape);
+        Ok(popped)
+    }
+
+    /* Make given shape next in draw */
+    fn push(self: &mut Self, shape: Shape) {
         if self.bag_index > 0 {
             self.bag_index -= 1;
         } else {
@@ -60,7 +67,6 @@ impl NextTetroCtrl {
         }
         self.bag[self.bag_index] = shape;
         self.pushed_flag = true;
-        Ok(popped)
     }
 
     fn shuffle_bag() -> [Shape; DRAW_SIZE] {
