@@ -26,11 +26,9 @@ impl NextTetroCtrl {
         if self.bag_index < DRAW_SIZE - 1 {
             self.bag_index += 1;
         } else {
-            let new_draw = NextTetroCtrl::shuffle_bag();
-            for i in 0..DRAW_SIZE {
-                self.bag[i] = self.bag[i + DRAW_SIZE].clone();
-                self.bag[i + DRAW_SIZE] = new_draw[i].clone();
-            }
+            let (left, right) = self.bag.split_at_mut(DRAW_SIZE);
+            left.clone_from_slice(right);
+            right.clone_from_slice(&NextTetroCtrl::shuffle_bag());
             self.bag_index = 0;
         };
         self.pushed_flag = false;
@@ -67,7 +65,7 @@ impl NextTetroCtrl {
         Ok(popped)
     }
 
-    fn shuffle_bag() -> [Shape; 7] {
+    fn shuffle_bag() -> [Shape; DRAW_SIZE] {
         let mut rnd = thread_rng();
         let mut bag = [Shape::OShape, Shape::IShape,
                        Shape::TShape, Shape::JShape,
@@ -78,14 +76,10 @@ impl NextTetroCtrl {
     }
 
     pub fn new() -> Self {
-        let mut bag: [Shape; DRAW_SIZE * 2] = Default::default();
         /* do two shuffles and put them immediately inside bag */
-        let shuffle = NextTetroCtrl::shuffle_bag();
-        let shuffle2 = NextTetroCtrl::shuffle_bag();
-        for i in 0..shuffle.len() {
-            bag[i] = shuffle[i].clone();
-            bag[i + DRAW_SIZE] = shuffle2[i].clone();
-        }
+        let mut bag: [Shape; DRAW_SIZE * 2] = Default::default();
+        bag[0..DRAW_SIZE].clone_from_slice(&NextTetroCtrl::shuffle_bag());
+        bag[DRAW_SIZE..].clone_from_slice(&NextTetroCtrl::shuffle_bag());
         NextTetroCtrl{
             view: UpdatableView::default(),
             bag: bag,
