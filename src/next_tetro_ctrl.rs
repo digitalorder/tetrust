@@ -20,9 +20,9 @@ pub struct AlreadyPushed;
 
 impl NextTetroCtrl {
     /* Consume next item in upcoming queue and fill in empty spaces if they occur */
-    fn draw_next(self: &mut Self) -> Shape {
+    fn draw_next(self: &mut Self, never_redraw: bool) -> Shape {
         let result = self.bag[self.bag_index].clone();
-        if self.bag_index < DRAW_SIZE - 1 {
+        if self.bag_index < DRAW_SIZE - 1 || never_redraw {
             self.bag_index += 1;
         } else {
             /* used up current draw, time to generate a new one */
@@ -35,10 +35,11 @@ impl NextTetroCtrl {
         result
     }
 
-    /* Consume next item from upcoming queue and make a proper Tetrimino out of it */
-    pub fn pop(self: &mut Self) -> FieldTetrimino {
+    /* Actual consumption code with additional parameter to control
+     * whether last item in bag will trigger redraw.*/
+    fn pop_impl(self: &mut Self, never_redraw: bool) -> FieldTetrimino {
         self.view.update();
-        let shape = self.draw_next();
+        let shape = self.draw_next(never_redraw);
         FieldTetrimino{
             coords: match shape {
                 Shape::LShape | Shape::TShape | Shape::JShape => Coords{row: HEIGHT, col: WIDTH / 2 - 2},
@@ -48,13 +49,18 @@ impl NextTetroCtrl {
         }
     }
 
+    /* Consume next item from upcoming queue and make a proper Tetrimino out of it */
+    pub fn pop(self: &mut Self) -> FieldTetrimino {
+        self.pop_impl(false)
+    }
+
     /* Replace given shape with whatever is on top of upcoming queue */
     pub fn swap(self: &mut Self, shape: Shape) -> Result<(FieldTetrimino), AlreadyPushed> {
         if self.pushed_flag {
             return Err(AlreadyPushed{});
         }
 
-        let popped = self.pop();
+        let popped = self.pop_impl(true);
         self.push(shape);
         Ok(popped)
     }
