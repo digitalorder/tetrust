@@ -96,7 +96,7 @@ impl NextTetroCtrl {
 }
 
 impl Ctrl for NextTetroCtrl {
-    fn show(self: &mut Self, view: &impl View) {
+    fn show(self: &mut Self, view: &mut impl View) {
         self.view.show(view, &ShowArgs::NextTetroArgs{
             next: &self.bag[self.bag_index..self.bag_index + PREVIEW_SIZE]
         });

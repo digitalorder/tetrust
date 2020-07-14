@@ -95,7 +95,7 @@ pub mod engine {
         game.state == State::GameOver
     }
 
-    pub fn draw_frame(game: &mut Game, view: &impl View) {
+    pub fn draw_frame(game: &mut Game, view: &mut impl View) {
         game.score.show(view);
         game.static_ctrl.show(view);
         game.next_tetro.show(view);

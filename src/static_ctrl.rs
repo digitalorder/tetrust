@@ -6,7 +6,7 @@ pub struct StaticCtrl {
 }
 
 impl Ctrl for StaticCtrl {
-    fn show(self: &mut Self, view: &impl View) {
+    fn show(self: &mut Self, view: &mut impl View) {
         self.view.show(view, &ShowArgs::StaticArgs{});
     }
 }

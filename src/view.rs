@@ -19,7 +19,7 @@ pub enum ShowArgs<'a> {
 }
 
 pub trait View {
-    fn show_subview(self: &Self, args: &ShowArgs);
+    fn show_subview(self: &mut Self, args: &ShowArgs);
 }
 
 pub struct ConsoleView {
@@ -42,7 +42,7 @@ macro_rules! shape_and_color {
 }
 
 impl View for ConsoleView {
-    fn show_subview(self: &Self, args: &ShowArgs) {
+    fn show_subview(self: &mut Self, args: &ShowArgs) {
         match args {
             ShowArgs::ScoreArgs{level, lines, score} => {
                 print!("{}Level: {} Score: {} Lines: {}",

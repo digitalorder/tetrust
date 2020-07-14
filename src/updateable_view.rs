@@ -9,7 +9,7 @@ impl UpdatableView {
         self.updated = true;
     }
 
-    pub fn show(self: &mut Self, view: &impl View, args: &ShowArgs) {
+    pub fn show(self: &mut Self, view: &mut impl View, args: &ShowArgs) {
         if self.updated {
             view.show_subview(args);
         }
@@ -22,5 +22,5 @@ impl Default for UpdatableView {
 }
 
 pub trait Ctrl {
-    fn show(self: &mut Self, view: &impl View);
+    fn show(self: &mut Self, view: &mut impl View);
 }

@@ -126,7 +126,7 @@ impl PlayfieldCtrl {
 }
 
 impl Ctrl for PlayfieldCtrl {
-    fn show(self: &mut Self, view: &impl View) {
+    fn show(self: &mut Self, view: &mut impl View) {
         let ghost_tetro = if self.no_ghost {
             FieldTetrimino::default()
         } else {

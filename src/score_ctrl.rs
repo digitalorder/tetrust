@@ -47,7 +47,7 @@ impl ScoreCtrl {
 }
 
 impl Ctrl for ScoreCtrl {
-    fn show(self: &mut Self, view: &impl View) {
+    fn show(self: &mut Self, view: &mut impl View) {
         self.view.show(view, &ShowArgs::ScoreArgs{level: self.level, lines: self.lines_cleared, score: self.score});
     }
 }
