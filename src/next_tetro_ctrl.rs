@@ -108,3 +108,68 @@ impl Ctrl for NextTetroCtrl {
         });
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::view::ShowArgs;
+    #[derive(Default)]
+    struct TestView {
+        pub next: [Shape; PREVIEW_SIZE]
+    }
+
+    impl View for TestView {
+        fn show_subview(self: &mut Self, args: &ShowArgs) {
+            match args {
+                ShowArgs::NextTetroArgs{next} => {
+                    self.next.clone_from_slice(next);
+                }
+                _ => { panic!("unexpected!"); }
+            }
+        }
+    }
+
+    #[test]
+    fn cannot_swap_twice() {
+        let mut ctrl = NextTetroCtrl::new();
+        assert_eq!(ctrl.swap(Shape::IShape).is_ok(), true);
+        assert_eq!(ctrl.swap(Shape::IShape).is_err(), true);
+    }
+
+    #[test]
+    fn can_swap_after_pop() {
+        let mut ctrl = NextTetroCtrl::new();
+        assert_eq!(ctrl.swap(Shape::IShape).is_ok(), true);
+        ctrl.pop();
+        assert_eq!(ctrl.swap(Shape::IShape).is_ok(), true);
+    }
+
+    #[test]
+    fn pop_5_and_hold() {
+        /* Corner case: pop 6 times and push back the last one.
+         * It should not have effect on upcoming queue.*/
+        let mut ctrl = NextTetroCtrl::new();
+        let mut test_view: TestView = Default::default();
+        ctrl.show(&mut test_view);
+        let mut popped_shape = Shape::NoShape;
+        let mut queue_after_pop = test_view.next.clone();
+
+        /* pop queue 6 times and watch items propagating to the top */
+        for i in 0..DRAW_SIZE - 1 {
+            let queue_before_pop = test_view.next.clone();
+            popped_shape = ctrl.pop().tetro.shape;
+            ctrl.show(&mut test_view);
+            queue_after_pop = test_view.next.clone();
+            assert_eq!(queue_before_pop[0], popped_shape, "round: {}", i);
+            assert_eq!(queue_before_pop[1..], queue_after_pop[0..PREVIEW_SIZE - 1], "round: {}", i);
+        }
+        /* let's try to swap the last item from first 7-pieces draw */
+        let swap_result = ctrl.swap(popped_shape.clone());
+        assert_eq!(swap_result.is_ok(), true);
+
+        /* it should not have an affect on items below top */
+        ctrl.show(&mut test_view);
+        let queue_after_swap = test_view.next.clone();
+        assert_eq!(queue_after_swap[1..], queue_after_pop[1..]);
+    }
+}
