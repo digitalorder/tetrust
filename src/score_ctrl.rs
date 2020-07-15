@@ -2,6 +2,8 @@ use crate::updateable_view::{UpdatableView, Ctrl};
 use crate::view::{View, ShowArgs};
 use std::cmp;
 
+const MAX_LEVEL: i8 = 29;
+
 pub struct ScoreCtrl {
     view: UpdatableView,
     pub level: i8,
@@ -39,7 +41,7 @@ impl ScoreCtrl {
     pub fn new(level: i8) -> Self {
         ScoreCtrl {
             view: UpdatableView::default(),
-            level: if level < 29 { level as i8 } else { 29 },
+            level: if level < MAX_LEVEL && level >= 0 { level as i8 } else { MAX_LEVEL },
             score: 0,
             lines_cleared: 0,
         }
