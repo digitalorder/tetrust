@@ -14,7 +14,7 @@ pub mod engine {
         pub level: u8,
     }
 
-    #[derive(PartialEq)]
+    #[derive(Clone, PartialEq)]
     pub enum State {
         CompletionPhase,
         FallingPhase,
@@ -144,21 +144,25 @@ pub mod engine {
         }
     }
 
+    fn falling_phase(game: &mut Game, event: Event) -> (State, bool) {
+        /* replace timeout drop with KeyDown event to simplify further handling */
+        let event = if event == Event::Timeout && game.fall.inc_frame_counter(game.score.level) {
+            Event::KeyDown
+        } else {
+            event
+        };
+
+        let state = handle_user_move(game, event);
+        (state.clone(), state == State::PatternPhase)
+    }
+
     pub fn calculate_frame(game: &mut Game, event: Event) -> bool {
         let mut reschedule = false;
-        /* replace timeout drop with KeyDown event to simplify further handling */
         match game.state {
             State::FallingPhase | State::LockedPhase => {
-                let event = if event == Event::Timeout && game.fall.inc_frame_counter(game.score.level) {
-                    Event::KeyDown
-                } else {
-                    event
-                };
-
-                game.state = handle_user_move(game, event);
-                if game.state == State::PatternPhase {
-                    reschedule = true;
-                }
+                let result = falling_phase(game, event);
+                game.state = result.0;
+                reschedule = result.1;
             },
             State::PatternPhase => {
                 game.playfield.place_active();
