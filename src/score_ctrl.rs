@@ -9,6 +9,7 @@ pub struct ScoreCtrl {
     pub level: i8,
     score: u32,
     lines_cleared: u32,
+    clear_statistic: [u32; 4],
 }
 
 impl ScoreCtrl {
@@ -32,10 +33,13 @@ impl ScoreCtrl {
     }
 
     pub fn update(self: &mut Self, lines: u8) {
-        self.lines_cleared += lines as u32;
-        self.level = cmp::max(self.level, (self.lines_cleared / 10) as i8);
-        self.score += ScoreCtrl::score_increment(self.level, lines as u8);
-        self.view.update();
+        if lines > 0 {
+            self.lines_cleared += lines as u32;
+            self.level = cmp::max(self.level, (self.lines_cleared / 10) as i8);
+            self.score += ScoreCtrl::score_increment(self.level, lines as u8);
+            self.clear_statistic[(lines - 1) as usize] += 1;
+            self.view.update();
+        }
     }
 
     pub fn new(level: i8) -> Self {
@@ -44,12 +48,18 @@ impl ScoreCtrl {
             level: if level < MAX_LEVEL && level >= 0 { level as i8 } else { MAX_LEVEL },
             score: 0,
             lines_cleared: 0,
+            clear_statistic: Default::default(),
         }
     }
 }
 
 impl Ctrl for ScoreCtrl {
     fn show(self: &mut Self, view: &mut impl View) {
-        self.view.show(view, &ShowArgs::ScoreArgs{level: self.level, lines: self.lines_cleared, score: self.score});
+        self.view.show(view, &ShowArgs::ScoreArgs{
+            level: self.level,
+            lines: self.lines_cleared,
+            score: self.score,
+            clear_statistic: &self.clear_statistic,
+        });
     }
 }

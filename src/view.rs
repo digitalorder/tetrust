@@ -14,7 +14,7 @@ pub enum ShowArgs<'a> {
                   ghost_tetro: &'a FieldTetrimino,
                   selected_lines: &'a dyn Storable,
                  },
-    ScoreArgs{level: i8, score: u32, lines: u32},
+    ScoreArgs{level: i8, score: u32, lines: u32, clear_statistic: &'a [u32; 4]},
     NextTetroArgs{next: &'a [Shape]},
 }
 
@@ -26,8 +26,8 @@ pub struct ConsoleView {
 }
 const NEXT_TETRO_BASE_ROW: i8 = 4;
 const NEXT_TETRO_BASE_COL: i8 = 26;
-const SCORE_BASE_ROW: u16 = 2;
-const SCORE_BASE_COL: u16 = 26;
+const SCORE_BASE_ROW: u16 = 4;
+const SCORE_BASE_COL: u16 = 40;
 
 macro_rules! rgb_color {
     ($r:expr,$g:expr,$b:expr) => {
@@ -44,9 +44,21 @@ macro_rules! shape_and_color {
 impl View for ConsoleView {
     fn show_subview(self: &mut Self, args: &ShowArgs) {
         match args {
-            ShowArgs::ScoreArgs{level, lines, score} => {
-                print!("{}Level: {} Score: {} Lines: {}",
-                       termion::cursor::Goto(SCORE_BASE_COL, SCORE_BASE_ROW), level, score, lines)
+            ShowArgs::ScoreArgs{level, lines, score, clear_statistic} => {
+                print!("{}Level: {}",
+                       termion::cursor::Goto(SCORE_BASE_COL, SCORE_BASE_ROW), level);
+                print!("{}Score: {}",
+                       termion::cursor::Goto(SCORE_BASE_COL, SCORE_BASE_ROW + 1), score);
+                print!("{}Lines: {}",
+                       termion::cursor::Goto(SCORE_BASE_COL, SCORE_BASE_ROW + 2), lines);
+                print!("{}Singles: {}",
+                       termion::cursor::Goto(SCORE_BASE_COL, SCORE_BASE_ROW + 3), clear_statistic[0]);
+                print!("{}Doubles: {}",
+                       termion::cursor::Goto(SCORE_BASE_COL, SCORE_BASE_ROW + 4), clear_statistic[1]);
+                print!("{}Triples: {}",
+                       termion::cursor::Goto(SCORE_BASE_COL, SCORE_BASE_ROW + 5), clear_statistic[2]);
+                print!("{}Tetrises: {}",
+                       termion::cursor::Goto(SCORE_BASE_COL, SCORE_BASE_ROW + 6), clear_statistic[3]);
             },
             ShowArgs::StaticArgs => {
                 print!("{}Move: ⬅️ ⬇️ ➡️  Rotate: ⬆️  Drop: Spacebar. Hold: h. Exit: q\n\r",
