@@ -45,20 +45,15 @@ impl View for ConsoleView {
     fn show_subview(self: &mut Self, args: &ShowArgs) {
         match args {
             ShowArgs::ScoreArgs{level, lines, score, clear_statistic} => {
-                print!("{}Level: {}",
-                       termion::cursor::Goto(SCORE_BASE_COL, SCORE_BASE_ROW), level);
-                print!("{}Score: {}",
-                       termion::cursor::Goto(SCORE_BASE_COL, SCORE_BASE_ROW + 1), score);
-                print!("{}Lines: {}",
-                       termion::cursor::Goto(SCORE_BASE_COL, SCORE_BASE_ROW + 2), lines);
-                print!("{}Singles: {}",
-                       termion::cursor::Goto(SCORE_BASE_COL, SCORE_BASE_ROW + 3), clear_statistic[0]);
-                print!("{}Doubles: {}",
-                       termion::cursor::Goto(SCORE_BASE_COL, SCORE_BASE_ROW + 4), clear_statistic[1]);
-                print!("{}Triples: {}",
-                       termion::cursor::Goto(SCORE_BASE_COL, SCORE_BASE_ROW + 5), clear_statistic[2]);
-                print!("{}Tetrises: {}",
-                       termion::cursor::Goto(SCORE_BASE_COL, SCORE_BASE_ROW + 6), clear_statistic[3]);
+                show_text_column(&Coords{row: SCORE_BASE_ROW as i8, col: SCORE_BASE_COL as i8}, &[
+                    ("Level: ", &((*level) as u32)),
+                    ("Score: ", score),
+                    ("Lines: ", lines),
+                    ("Singles: ", &clear_statistic[0]),
+                    ("Doubles: ", &clear_statistic[1]),
+                    ("Triples: ", &clear_statistic[2]),
+                    ("Tetrises: ", &clear_statistic[3]),
+                ]);
             },
             ShowArgs::StaticArgs => {
                 print!("{}Move: ⬅️ ⬇️ ➡️  Rotate: ⬆️  Drop: Spacebar. Hold: h. Exit: q\n\r",
@@ -114,6 +109,14 @@ fn draw_rectangle(top_left: &Coords, height: i8, width: i8) {
         print!("─");
     }
     print!("┘");
+}
+
+fn show_text_column(top_left: &Coords, lines: &[(&str, &u32)]) {
+    for (index, line) in lines.iter().enumerate() {
+        print!("{}{}{}",
+               termion::cursor::Goto(top_left.col as u16, (top_left.row + index as i8) as u16),
+               line.0, line.1);
+    }
 }
 
 struct ColorTable {
