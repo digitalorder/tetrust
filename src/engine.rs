@@ -7,6 +7,7 @@ pub mod engine {
     use crate::static_ctrl::{StaticCtrl};
     use crate::updateable_view::Ctrl;
     use crate::fall::{Fall};
+    use crate::playtime_ctrl::{PlaytimeCtrl};
     use std::fmt;
 
     pub struct Config {
@@ -76,6 +77,7 @@ pub mod engine {
         static_ctrl: StaticCtrl,
         score: ScoreCtrl,
         fall: Fall,
+        playtime: PlaytimeCtrl,
     }
 
     pub fn new_game(config: Config, playfield: playfield::Playfield) -> Game {
@@ -86,6 +88,7 @@ pub mod engine {
             score: ScoreCtrl::new(config.level as i8),
             state: State::CompletionPhase,
             fall: Fall::new(),
+            playtime: PlaytimeCtrl::new(),
         }
     }
 
@@ -94,8 +97,9 @@ pub mod engine {
     }
 
     pub fn draw_frame(game: &mut Game, view: &mut impl View) {
-        game.score.show(view);
         game.static_ctrl.show(view);
+        game.score.show(view);
+        game.playtime.show(view);
         game.next_tetro.show(view);
         game.playfield.show(view);
     }
@@ -144,6 +148,9 @@ pub mod engine {
 
     pub fn calculate_frame(game: &mut Game, event: Event) {
         let mut reschedule = true;
+        if event == Event::Timeout {
+            game.playtime.update();
+        }
         while reschedule {
             let result = match game.state {
                 State::FallingPhase | State::LockedPhase => {

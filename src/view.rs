@@ -16,6 +16,7 @@ pub enum ShowArgs<'a> {
                  },
     ScoreArgs{level: i8, score: u32, lines: u32, clear_statistic: &'a [u32; 4]},
     NextTetroArgs{next: &'a [Shape]},
+    PlaytimeArgs{min: u32, sec: u32, csec: u32},
 }
 
 pub trait View {
@@ -28,6 +29,8 @@ const NEXT_TETRO_BASE_ROW: i8 = 4;
 const NEXT_TETRO_BASE_COL: i8 = 26;
 const SCORE_BASE_ROW: u16 = 4;
 const SCORE_BASE_COL: u16 = 40;
+const PLAYTIME_BASE_ROW: u16 = 13;
+const PLAYTIME_BASE_COL: u16 = 40;
 
 macro_rules! rgb_color {
     ($r:expr,$g:expr,$b:expr) => {
@@ -87,6 +90,11 @@ impl View for ConsoleView {
                                            termion::color::Bg(color), termion::color::Bg(termion::color::Black));
                     }
                 }
+            },
+            ShowArgs::PlaytimeArgs{min, sec, csec} => {
+                print!("{}Time: {:02}:{:02}.{:02}",
+                        termion::cursor::Goto(PLAYTIME_BASE_COL, PLAYTIME_BASE_ROW),
+                        min, sec, csec);
             }
         };
         let mut stdout = stdout().into_raw_mode().unwrap();
