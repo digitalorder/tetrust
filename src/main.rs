@@ -52,10 +52,7 @@ fn do_game(no_ghost: bool, level: u8) {
     while !engine::is_finished(&game) {
         let mut view = view::ConsoleView{};
         let event = rx.recv().unwrap();
-        let reschedule = engine::calculate_frame(&mut game, event.clone());
-        if reschedule {
-            while engine::calculate_frame(&mut game, engine::Event::Reschedule) {};
-        }
+        engine::calculate_frame(&mut game, event.clone());
         engine::draw_frame(&mut game, &mut view);
 
         if event == engine::Event::KeyExit {

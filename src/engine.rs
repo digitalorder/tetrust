@@ -43,7 +43,6 @@ pub mod engine {
     #[derive(Clone, PartialEq)]
     pub enum Event {
         Timeout,
-        Reschedule,
         KeyLeft,
         KeyRight,
         KeyTurn,
@@ -64,7 +63,6 @@ pub mod engine {
                 Event::KeyTurn => "🔁",
                 Event::KeyDrop => "⬆️",
                 Event::KeyHold => "✋",
-                Event::Reschedule => "R",
             };
 
             write!(f, "{}", result)
@@ -144,52 +142,48 @@ pub mod engine {
         }
     }
 
-    fn falling_phase(game: &mut Game, event: Event) -> (State, bool) {
-        /* replace timeout drop with KeyDown event to simplify further handling */
-        let event = if event == Event::Timeout && game.fall.inc_frame_counter(game.score.level) {
-            Event::KeyDown
-        } else {
-            event
-        };
+    pub fn calculate_frame(game: &mut Game, event: Event) {
+        let mut reschedule = true;
+        while reschedule {
+            let result = match game.state {
+                State::FallingPhase | State::LockedPhase => {
+                    /* replace timeout drop with KeyDown event to simplify further handling */
+                    let event = if event == Event::Timeout && game.fall.inc_frame_counter(game.score.level) {
+                        Event::KeyDown
+                    } else {
+                        event.clone()
+                    };
 
-        let state = handle_user_move(game, event);
-        (state.clone(), state == State::PatternPhase)
-    }
-
-    pub fn calculate_frame(game: &mut Game, event: Event) -> bool {
-        let mut reschedule = false;
-        match game.state {
-            State::FallingPhase | State::LockedPhase => {
-                let result = falling_phase(game, event);
-                game.state = result.0;
-                reschedule = result.1;
-            },
-            State::PatternPhase => {
-                game.playfield.place_active();
-                game.playfield.start_animation();
-                game.state = State::AnimationPhase;
-                reschedule = true;
-            },
-            State::AnimationPhase => {
-                if event == Event::Timeout {
-                    if !game.playfield.animate() {
-                        game.state = State::CompletionPhase;
-                        reschedule = true;
+                    let state = handle_user_move(game, event);
+                    (state.clone(), state == State::PatternPhase)
+                },
+                State::PatternPhase => {
+                    game.playfield.place_active();
+                    game.playfield.start_animation();
+                    (State::AnimationPhase, true)
+                },
+                State::AnimationPhase => {
+                    if event.clone() == Event::Timeout && !game.playfield.animate() {
+                        (State::CompletionPhase, true)
+                    } else {
+                        (State::AnimationPhase, false)
                     }
+                },
+                State::CompletionPhase => {
+                    /* elimimination phase */
+                    let removed_rows_count = game.playfield.remove_filled();
+                    /* completion phase */
+                    game.score.update(removed_rows_count as u8);
+                    game.fall.reset();
+                    (create_new_tetro(game), false)
+                },
+                State::GameOver => {
+                    /* do nothing for now */
+                    (State::GameOver, false)
                 }
-            },
-            State::CompletionPhase => {
-                /* elimimination phase */
-                let removed_rows_count = game.playfield.remove_filled();
-                /* completion phase */
-                game.score.update(removed_rows_count as u8);
-                game.state = create_new_tetro(game);
-                game.fall.reset();
-            },
-            State::GameOver => {
-                /* do nothing for now */
-            }
+            };
+            game.state = result.0;
+            reschedule = result.1;
         }
-        reschedule
     }
 }
