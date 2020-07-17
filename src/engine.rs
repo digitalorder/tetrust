@@ -109,7 +109,7 @@ pub mod engine {
         }
     }
 
-    fn handle_user_move(game: &mut Game, event: Event) -> State {
+    fn handle_user_move(game: &mut Game, event: Event) -> (State, bool) {
         let (move_success, fall_space) = match event {
             Event::KeyDown => game.playfield.move_active(playfield::Dir::Down),
             Event::KeyLeft => game.playfield.move_active(playfield::Dir::Left),
@@ -133,12 +133,12 @@ pub mod engine {
         };
 
         if !move_success && event == Event::KeyDown {
-            State::PatternPhase
+            (State::PatternPhase, true)
         } else if move_success && !fall_space {
             game.fall.lock_delay();
-            State::LockedPhase
+            (State::LockedPhase, false)
         } else {
-            State::FallingPhase
+            (State::FallingPhase, false)
         }
     }
 
@@ -154,8 +154,7 @@ pub mod engine {
                         event.clone()
                     };
 
-                    let state = handle_user_move(game, event);
-                    (state.clone(), state == State::PatternPhase)
+                    handle_user_move(game, event.clone())
                 },
                 State::PatternPhase => {
                     game.playfield.place_active();
@@ -163,7 +162,7 @@ pub mod engine {
                     (State::AnimationPhase, true)
                 },
                 State::AnimationPhase => {
-                    if event.clone() == Event::Timeout && !game.playfield.animate() {
+                    if event == Event::Timeout && !game.playfield.animate() {
                         (State::CompletionPhase, true)
                     } else {
                         (State::AnimationPhase, false)
