@@ -11,9 +11,9 @@ use termion::input::TermRead;
 use termion::raw::IntoRawMode;
 use clap::{App, value_t};
 
-fn do_game(no_ghost: bool, level: u8) {
+fn do_game(no_ghost: bool, level: u8, next_queue_size: u8) {
     let playfield = playfield::Playfield::new(Default::default());
-    let config = engine::Config{no_ghost: no_ghost, level: level};
+    let config = engine::Config{no_ghost: no_ghost, level: level, next_queue_size: next_queue_size};
     let mut game = engine::new_game(config, playfield);
 
     let (timer_tx, rx) = mpsc::channel();
@@ -85,11 +85,13 @@ fn main() {
                     .about("Classic tetris game implemented in Rust")
                     .args_from_usage(
                         "-g, --no-ghost 'Disables ghost tetro for easy dropping'
-                         -l, --level [level] 'Start level (0-29)'")
+                         -l, --level [level] 'Start level (0-29)'
+                         -n, --next-queue-size [size] 'Upcoming tetriminos queue size (0-4)'")
                     .get_matches();
 
     let no_ghost = matches.is_present("no-ghost");
     let level = value_t!(matches, "level", u8).unwrap_or(0);
+    let next_queue_size = value_t!(matches, "next-queue-size", u8).unwrap_or(4);
     println!("no ghost tetro: {} level: {}", no_ghost, level);
-    do_game(no_ghost, level);
+    do_game(no_ghost, level, next_queue_size);
 }

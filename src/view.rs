@@ -1,14 +1,13 @@
 use crate::playfield::{Playfield, FieldTetrimino, WIDTH, HEIGHT, Coords, ShapeAt, ShapeAtType};
 use crate::figures::figures::{Shape, Tetrimino, LAYOUT_HEIGHT, LAYOUT_WIDTH};
 use crate::playfield_ctrl::{Storable};
-use crate::next_tetro_ctrl::{PREVIEW_SIZE};
 use std::io::{stdout, Write};
 use termion::raw::IntoRawMode;
 extern crate termion;
 
 pub type Row = [char; WIDTH as usize];
 pub enum ShowArgs<'a> {
-    StaticArgs,
+    StaticArgs{next_queue_size: i8},
     PlayfieldArgs{playfield: &'a Playfield,
                   active_tetro: &'a FieldTetrimino,
                   ghost_tetro: &'a FieldTetrimino,
@@ -33,6 +32,7 @@ const PLAYTIME_BASE_ROW: u16 = 13;
 const PLAYTIME_BASE_COL: u16 = 40;
 const PARK_POS_ROW: u16 = 24;
 const PARK_POS_COL: u16 = 1;
+pub const MAX_PREVIEW_SIZE: usize = 4;
 
 macro_rules! rgb_color {
     ($r:expr,$g:expr,$b:expr) => {
@@ -60,11 +60,11 @@ impl View for ConsoleView {
                     ("Tetrises: ", &clear_statistic[3]),
                 ]);
             },
-            ShowArgs::StaticArgs => {
+            ShowArgs::StaticArgs{next_queue_size} => {
                 print!("{}Move: ⬅️ ⬇️ ➡️  Rotate: ⬆️  Drop: Spacebar. Hold: h. Exit: q\n\r",
                        termion::cursor::Goto(1, 1));
                 draw_rectangle(&Coords{row: 2, col: 1}, HEIGHT, WIDTH * 2);
-                draw_rectangle(&Coords{row: NEXT_TETRO_BASE_ROW, col: NEXT_TETRO_BASE_COL}, LAYOUT_HEIGHT * PREVIEW_SIZE as i8, LAYOUT_WIDTH * 2);
+                draw_rectangle(&Coords{row: NEXT_TETRO_BASE_ROW, col: NEXT_TETRO_BASE_COL}, LAYOUT_HEIGHT * next_queue_size, LAYOUT_WIDTH * 2);
             },
             ShowArgs::PlayfieldArgs{playfield, active_tetro, ghost_tetro, selected_lines} => {
                 for row in 0..HEIGHT {

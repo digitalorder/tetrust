@@ -1,5 +1,5 @@
 pub mod engine {
-    use crate::view::{View};
+    use crate::view::{View, MAX_PREVIEW_SIZE};
     use crate::playfield as playfield;
     use crate::playfield_ctrl::{PlayfieldCtrl};
     use crate::score_ctrl::{ScoreCtrl};
@@ -13,6 +13,7 @@ pub mod engine {
     pub struct Config {
         pub no_ghost: bool,
         pub level: u8,
+        pub next_queue_size: u8,
     }
 
     #[derive(Clone, PartialEq)]
@@ -81,10 +82,11 @@ pub mod engine {
     }
 
     pub fn new_game(config: Config, playfield: playfield::Playfield) -> Game {
+        let next_queue_size = std::cmp::min(config.next_queue_size as usize, MAX_PREVIEW_SIZE);
         Game {
             playfield: PlayfieldCtrl::new(playfield, config.no_ghost),
-            static_ctrl: StaticCtrl::default(),
-            next_tetro: NextTetroCtrl::new(),
+            static_ctrl: StaticCtrl::new(next_queue_size),
+            next_tetro: NextTetroCtrl::new(next_queue_size),
             score: ScoreCtrl::new(config.level as i8),
             state: State::CompletionPhase,
             fall: Fall::new(),

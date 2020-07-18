@@ -5,7 +5,6 @@ use crate::playfield::{FieldTetrimino, Coords, HEIGHT, WIDTH};
 use rand::{thread_rng};
 use rand::seq::SliceRandom;
 
-pub const PREVIEW_SIZE: usize = 4;
 const DRAW_SIZE: usize = 7;
 const BAG_SIZE: usize = DRAW_SIZE * 2;
 
@@ -14,6 +13,7 @@ pub struct NextTetroCtrl {
     bag: [Shape; BAG_SIZE],
     bag_index: usize,
     pushed_flag: bool,
+    preview_size: usize,
 }
 
 pub struct AlreadyPushed;
@@ -87,7 +87,7 @@ impl NextTetroCtrl {
         bag
     }
 
-    pub fn new() -> Self {
+    pub fn new(preview_size: usize) -> Self {
         /* do two shuffles and put them immediately inside bag */
         let mut bag: [Shape; BAG_SIZE] = Default::default();
         bag[0..DRAW_SIZE].clone_from_slice(&NextTetroCtrl::shuffle_bag());
@@ -96,7 +96,8 @@ impl NextTetroCtrl {
             view: UpdatableView::default(),
             bag: bag,
             bag_index: 0,
-            pushed_flag: false
+            pushed_flag: false,
+            preview_size: preview_size,
         }
     }
 }
@@ -104,7 +105,7 @@ impl NextTetroCtrl {
 impl Ctrl for NextTetroCtrl {
     fn show(self: &mut Self, view: &mut impl View) {
         self.view.show(view, &ShowArgs::NextTetroArgs{
-            next: &self.bag[self.bag_index..self.bag_index + PREVIEW_SIZE]
+            next: &self.bag[self.bag_index..self.bag_index + self.preview_size]
         });
     }
 }
@@ -112,10 +113,11 @@ impl Ctrl for NextTetroCtrl {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::view::ShowArgs;
+    use crate::view::{ShowArgs, MAX_PREVIEW_SIZE};
+
     #[derive(Default)]
     struct TestView {
-        pub next: [Shape; PREVIEW_SIZE]
+        pub next: [Shape; MAX_PREVIEW_SIZE]
     }
 
     impl View for TestView {
@@ -131,14 +133,14 @@ mod tests {
 
     #[test]
     fn cannot_swap_twice() {
-        let mut ctrl = NextTetroCtrl::new();
+        let mut ctrl = NextTetroCtrl::new(MAX_PREVIEW_SIZE);
         assert_eq!(ctrl.swap(Shape::IShape).is_ok(), true);
         assert_eq!(ctrl.swap(Shape::IShape).is_err(), true);
     }
 
     #[test]
     fn can_swap_after_pop() {
-        let mut ctrl = NextTetroCtrl::new();
+        let mut ctrl = NextTetroCtrl::new(MAX_PREVIEW_SIZE);
         assert_eq!(ctrl.swap(Shape::IShape).is_ok(), true);
         ctrl.pop();
         assert_eq!(ctrl.swap(Shape::IShape).is_ok(), true);
@@ -148,7 +150,7 @@ mod tests {
     fn pop_5_and_hold() {
         /* Corner case: pop 6 times and push back the last one.
          * It should not have effect on upcoming queue.*/
-        let mut ctrl = NextTetroCtrl::new();
+        let mut ctrl = NextTetroCtrl::new(MAX_PREVIEW_SIZE);
         let mut test_view: TestView = Default::default();
         ctrl.show(&mut test_view);
         let mut popped_shape = Shape::NoShape;
@@ -161,7 +163,7 @@ mod tests {
             ctrl.show(&mut test_view);
             queue_after_pop = test_view.next.clone();
             assert_eq!(queue_before_pop[0], popped_shape, "round: {}", i);
-            assert_eq!(queue_before_pop[1..], queue_after_pop[0..PREVIEW_SIZE - 1], "round: {}", i);
+            assert_eq!(queue_before_pop[1..], queue_after_pop[0..MAX_PREVIEW_SIZE - 1], "round: {}", i);
         }
         /* let's try to swap the last item from first 7-pieces draw */
         let swap_result = ctrl.swap(popped_shape.clone());
