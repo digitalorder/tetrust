@@ -31,6 +31,8 @@ const SCORE_BASE_ROW: u16 = 4;
 const SCORE_BASE_COL: u16 = 40;
 const PLAYTIME_BASE_ROW: u16 = 13;
 const PLAYTIME_BASE_COL: u16 = 40;
+const PARK_POS_ROW: u16 = 24;
+const PARK_POS_COL: u16 = 1;
 
 macro_rules! rgb_color {
     ($r:expr,$g:expr,$b:expr) => {
@@ -97,6 +99,7 @@ impl View for ConsoleView {
                         min, sec, csec);
             }
         };
+        print!("{}", termion::cursor::Goto(PARK_POS_COL, PARK_POS_ROW));
         let mut stdout = stdout().into_raw_mode().unwrap();
         stdout.flush().unwrap();
     }
