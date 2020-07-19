@@ -21,7 +21,7 @@ impl Fall {
     pub fn inc_frame_counter(self: &mut Self, level: i8) -> bool {
         if self.lock_delay_triggered {
             self.lock_delay_triggered = false;
-            self.frame_counter = Fall::max_frame_count(level) / 2;
+            self.frame_counter = Fall::max_frame_count(level) - (FRAME_RATE / 2) as i8;
             return false;
         }
 
