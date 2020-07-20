@@ -68,7 +68,10 @@ impl PlayfieldCtrl {
     }
 
     pub fn place_active(self: &mut Self) {
-        let _ = self.playfield.place(&self.active_tetro.tetro, self.active_tetro.coords);
+        match self.playfield.place(&self.active_tetro.tetro, self.active_tetro.coords) {
+            Err(_) => panic!("Unable to place active tetro: out of bounds"),
+            _ => {},
+        }
         self.active_tetro.tetro.shape = Shape::NoShape;
         self.view.update();
     }
