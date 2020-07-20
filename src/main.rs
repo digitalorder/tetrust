@@ -86,12 +86,14 @@ fn main() {
                     .args_from_usage(
                         "-g, --no-ghost 'Disables ghost tetro for easy dropping'
                          -l, --level [level] 'Start level (0-29)'
-                         -n, --next-queue-size [size] 'Upcoming tetriminos queue size (0-4)'")
+                         -n, --next-queue-size [size] 'Upcoming tetriminos queue size (0-4)'
+                         -m, --mode [marathon] 'Game mode'")
                     .get_matches();
 
     let no_ghost = matches.is_present("no-ghost");
     let level = value_t!(matches, "level", u8).unwrap_or(0);
     let next_queue_size = value_t!(matches, "next-queue-size", u8).unwrap_or(4);
-    println!("no ghost tetro: {} level: {}", no_ghost, level);
+    let mode = value_t!(matches, "mode", String).unwrap_or("marathon".to_string());
+    println!("no ghost tetro: {} level: {} queue size: {} mode: {}", no_ghost, level, next_queue_size, mode);
     do_game(no_ghost, level, next_queue_size);
 }
