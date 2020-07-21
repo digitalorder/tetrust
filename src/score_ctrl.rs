@@ -4,6 +4,7 @@ use crate::engine::engine::{Mode};
 use std::cmp;
 
 const MAX_LEVEL: i8 = 29;
+const SPRINT_LEVEL_GOAL: u32 = 40;
 
 pub struct ScoreCtrl {
     view: UpdatableView,
@@ -45,8 +46,10 @@ impl ScoreCtrl {
     }
 
     pub fn goal_complete(self: &Self) -> bool {
-        let _ = self.mode;
-        false
+        match self.mode {
+            Mode::Marathon => false,
+            Mode::Sprint => self.lines_cleared >= SPRINT_LEVEL_GOAL,
+        }
     }
 
     pub fn level(self: &Self) -> i8 {

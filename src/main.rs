@@ -87,7 +87,7 @@ fn main() {
                         "-g, --no-ghost 'Disables ghost tetro for easy dropping'
                          -l, --level [level] 'Start level (0-29)'
                          -n, --next-queue-size [size] 'Upcoming tetriminos queue size (0-4)'
-                         -m, --mode [marathon] 'Game mode'")
+                         -m, --mode [marathon,sprint] 'Game mode'")
                     .get_matches();
 
     let no_ghost = matches.is_present("no-ghost");
@@ -96,6 +96,8 @@ fn main() {
     let mode_str = value_t!(matches, "mode", String).unwrap_or("marathon".to_string());
     let mode = if mode_str == "marathon" {
         engine::Mode::Marathon
+    } else if mode_str == "sprint" {
+        engine::Mode::Sprint
     } else {
         println!("Unknown game mode {}. Use -h to list supported modes.", mode_str);
         std::process::exit(-1);

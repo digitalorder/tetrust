@@ -75,12 +75,14 @@ pub mod engine {
     #[derive(PartialEq)]
     pub enum Mode {
         Marathon,
+        Sprint,
     }
 
     impl fmt::Display for Mode {
         fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
             let result = match self {
                 Mode::Marathon => "Marathon",
+                Mode::Sprint => "Sprint",
             };
 
             write!(f, "{}", result)
@@ -200,10 +202,11 @@ pub mod engine {
                     game.score.update(removed_rows_count as u8);
                     game.fall.reset();
                     if game.score.goal_complete() {
-                        game.state = State::GameOver
+                        (State::GameOver, true)
+                    } else {
+                        /* generation phase */
+                        (create_new_tetro(game), false)
                     }
-                    /* generation phase */
-                    (create_new_tetro(game), false)
                 },
                 State::GameOver => {
                     /* do nothing for now */
