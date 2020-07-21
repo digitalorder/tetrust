@@ -1,15 +1,17 @@
 use crate::updateable_view::{UpdatableView, Ctrl};
 use crate::view::{View, ShowArgs};
+use crate::engine::engine::{Mode};
 use std::cmp;
 
 const MAX_LEVEL: i8 = 29;
 
 pub struct ScoreCtrl {
     view: UpdatableView,
-    pub level: i8,
+    level: i8,
     score: u32,
     lines_cleared: u32,
     clear_statistic: [u32; 4],
+    mode: Mode,
 }
 
 impl ScoreCtrl {
@@ -42,13 +44,23 @@ impl ScoreCtrl {
         }
     }
 
-    pub fn new(level: i8) -> Self {
+    pub fn goal_complete(self: &Self) -> bool {
+        let _ = self.mode;
+        false
+    }
+
+    pub fn level(self: &Self) -> i8 {
+        self.level
+    }
+
+    pub fn new(level: i8, mode: Mode) -> Self {
         ScoreCtrl {
             view: UpdatableView::default(),
             level: if level < MAX_LEVEL && level >= 0 { level as i8 } else { MAX_LEVEL },
             score: 0,
             lines_cleared: 0,
             clear_statistic: Default::default(),
+            mode: mode,
         }
     }
 }

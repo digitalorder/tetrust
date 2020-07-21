@@ -14,6 +14,7 @@ pub mod engine {
         pub no_ghost: bool,
         pub level: u8,
         pub next_queue_size: u8,
+        pub mode: Mode,
     }
 
     #[derive(Clone, PartialEq)]
@@ -71,6 +72,21 @@ pub mod engine {
         }
     }
 
+    #[derive(PartialEq)]
+    pub enum Mode {
+        Marathon,
+    }
+
+    impl fmt::Display for Mode {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            let result = match self {
+                Mode::Marathon => "Marathon",
+            };
+
+            write!(f, "{}", result)
+        }
+    }
+
     pub struct Game {
         playfield: PlayfieldCtrl,
         state: State,
@@ -87,7 +103,7 @@ pub mod engine {
             playfield: PlayfieldCtrl::new(playfield, config.no_ghost),
             static_ctrl: StaticCtrl::new(next_queue_size),
             next_tetro: NextTetroCtrl::new(next_queue_size),
-            score: ScoreCtrl::new(config.level as i8),
+            score: ScoreCtrl::new(config.level as i8, config.mode),
             state: State::CompletionPhase,
             fall: Fall::new(),
             playtime: PlaytimeCtrl::new(),
@@ -157,7 +173,7 @@ pub mod engine {
             let result = match game.state {
                 State::FallingPhase | State::LockedPhase => {
                     /* replace timeout drop with KeyDown event to simplify further handling */
-                    let event = if event == Event::Timeout && game.fall.inc_frame_counter(game.score.level) {
+                    let event = if event == Event::Timeout && game.fall.inc_frame_counter(game.score.level()) {
                         Event::KeyDown
                     } else {
                         event.clone()
@@ -183,6 +199,10 @@ pub mod engine {
                     /* completion phase */
                     game.score.update(removed_rows_count as u8);
                     game.fall.reset();
+                    if game.score.goal_complete() {
+                        game.state = State::GameOver
+                    }
+                    /* generation phase */
                     (create_new_tetro(game), false)
                 },
                 State::GameOver => {
