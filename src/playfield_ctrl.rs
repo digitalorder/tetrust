@@ -118,7 +118,7 @@ impl PlayfieldCtrl {
     pub fn new(playfield: Playfield, no_ghost: bool) -> Self {
         PlayfieldCtrl{
             playfield: playfield,
-            view: UpdatableView::default(),
+            view: UpdatableView::new(true),
             no_ghost: no_ghost,
             active_tetro: FieldTetrimino::default(),
             filled_lines: LineStorage::default(),

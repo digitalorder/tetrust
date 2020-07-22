@@ -93,7 +93,7 @@ impl NextTetroCtrl {
         bag[0..DRAW_SIZE].clone_from_slice(&NextTetroCtrl::shuffle_bag());
         bag[DRAW_SIZE..].clone_from_slice(&NextTetroCtrl::shuffle_bag());
         NextTetroCtrl{
-            view: UpdatableView::default(),
+            view: UpdatableView::new(true),
             bag: bag,
             bag_index: 0,
             pushed_flag: false,

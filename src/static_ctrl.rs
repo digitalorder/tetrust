@@ -15,7 +15,7 @@ impl Ctrl for StaticCtrl {
 impl StaticCtrl {
     pub fn new(next_queue_size: usize) -> Self {
         StaticCtrl{
-            view: UpdatableView::default(),
+            view: UpdatableView::new(true),
             next_queue_size: next_queue_size as i8,
         }
     }

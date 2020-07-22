@@ -17,7 +17,7 @@ impl PlaytimeCtrl {
     pub fn new() -> Self {
         PlaytimeCtrl {
             frame_counter: 0,
-            view: UpdatableView::default(),
+            view: UpdatableView::new(true),
         }
     }
 }

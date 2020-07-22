@@ -58,7 +58,7 @@ impl ScoreCtrl {
 
     pub fn new(level: i8, mode: Mode) -> Self {
         ScoreCtrl {
-            view: UpdatableView::default(),
+            view: UpdatableView::new(true),
             level: if level < MAX_LEVEL && level >= 0 { level as i8 } else { MAX_LEVEL },
             score: 0,
             lines_cleared: 0,

@@ -15,10 +15,10 @@ impl UpdatableView {
         }
         self.updated = false;
     }
-}
 
-impl Default for UpdatableView {
-    fn default() -> Self {UpdatableView{updated: true}}
+    pub fn new(pending: bool) -> Self {
+        UpdatableView{updated: pending}
+    }
 }
 
 pub trait Ctrl {
