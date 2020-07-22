@@ -9,3 +9,4 @@ pub mod next_tetro_ctrl;
 pub mod static_ctrl;
 pub mod fall;
 pub mod playtime_ctrl;
+pub mod endgame_ctrl;

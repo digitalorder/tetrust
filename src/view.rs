@@ -16,6 +16,7 @@ pub enum ShowArgs<'a> {
     ScoreArgs{level: i8, score: u32, lines: u32, clear_statistic: &'a [u32; 4]},
     NextTetroArgs{next: &'a [Shape]},
     PlaytimeArgs{min: u32, sec: u32, csec: u32},
+    EndgameArgs{game_over: bool},
 }
 
 pub trait View {
@@ -32,6 +33,8 @@ const PLAYTIME_BASE_ROW: u16 = 13;
 const PLAYTIME_BASE_COL: u16 = 40;
 const PARK_POS_ROW: u16 = 24;
 const PARK_POS_COL: u16 = 1;
+const GAMEOVER_BASE_ROW: u16 = 16;
+const GAMEOVER_BASE_COL: u16 = 6;
 pub const MAX_PREVIEW_SIZE: usize = 4;
 
 macro_rules! rgb_color {
@@ -97,6 +100,17 @@ impl View for ConsoleView {
                 print!("{}Time: {:02}:{:02}.{:02}",
                         termion::cursor::Goto(PLAYTIME_BASE_COL, PLAYTIME_BASE_ROW),
                         min, sec, csec);
+            },
+            ShowArgs::EndgameArgs{game_over} => {
+                if *game_over {
+                    show_pixelised(&Coords{row: GAMEOVER_BASE_ROW as i8, col: GAMEOVER_BASE_COL as i8},
+                                   &[" ***  *** *   * ****    **  *   * **** *** ",
+                                     "*    *  * ** ** *      *  * *   * *    *  *",
+                                     "*    *  * * * * *      *  * *   * *    *  *",
+                                     "* ** **** * * * ***    *  *  * *  ***  *** ",
+                                     "*  * *  * *   * *      *  *  * *  *    *  *",
+                                     " *** *  * *   * ****    **    *   **** *  *"])
+                }
             }
         };
         print!("{}", termion::cursor::Goto(PARK_POS_COL, PARK_POS_ROW));
@@ -127,6 +141,19 @@ fn show_text_column(top_left: &Coords, lines: &[(&str, &u32)]) {
         print!("{}{}{}",
                termion::cursor::Goto(top_left.col as u16, (top_left.row + index as i8) as u16),
                line.0, line.1);
+    }
+}
+
+fn show_pixelised(top_left: &Coords, pixel_lines: &[&str]) {
+    for (index, line) in pixel_lines.iter().enumerate() {
+        print!("{}", termion::cursor::Goto(top_left.col as u16, (top_left.row + index as i8) as u16));
+        for pixel in line.chars() {
+            match pixel {
+                '*' => {print!("{} {}", termion::color::Bg(termion::color::White),
+                                         termion::color::Bg(termion::color::Black));}
+                _ => {print!(" ");}
+            };
+        }
     }
 }
 

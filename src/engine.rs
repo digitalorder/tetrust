@@ -8,6 +8,7 @@ pub mod engine {
     use crate::updateable_view::Ctrl;
     use crate::fall::{Fall};
     use crate::playtime_ctrl::{PlaytimeCtrl};
+    use crate::endgame_ctrl::{EndgameCtrl};
     use std::fmt;
 
     pub struct Config {
@@ -74,7 +75,7 @@ pub mod engine {
         }
     }
 
-    #[derive(PartialEq)]
+    #[derive(Clone, PartialEq)]
     pub enum Mode {
         Marathon,
         Sprint,
@@ -99,6 +100,7 @@ pub mod engine {
         score: ScoreCtrl,
         fall: Fall,
         playtime: PlaytimeCtrl,
+        end_game: EndgameCtrl,
     }
 
     pub fn new_game(config: Config, playfield: playfield::Playfield) -> Game {
@@ -107,10 +109,11 @@ pub mod engine {
             playfield: PlayfieldCtrl::new(playfield, config.no_ghost),
             static_ctrl: StaticCtrl::new(next_queue_size),
             next_tetro: NextTetroCtrl::new(next_queue_size),
-            score: ScoreCtrl::new(config.level as i8, config.mode),
+            score: ScoreCtrl::new(config.level as i8, config.mode.clone()),
             state: State::CompletionPhase,
             fall: Fall::new(),
             playtime: PlaytimeCtrl::new(),
+            end_game: EndgameCtrl::new(config.mode),
         }
     }
 
@@ -124,15 +127,7 @@ pub mod engine {
         game.playtime.show(view);
         game.next_tetro.show(view);
         game.playfield.show(view);
-    }
-
-    fn create_new_tetro(game: &mut Game) -> State {
-        if game.playfield.new_active(game.next_tetro.pop()) {
-            /* tetro can be placed in start position */
-            State::FallingPhase
-        } else {
-            State::GameOver
-        }
+        game.end_game.show(view);
     }
 
     fn handle_user_move(game: &mut Game, event: Event) -> (State, bool) {
@@ -177,7 +172,13 @@ pub mod engine {
             let result = match game.state {
                 State::GenerationPhase => {
                     /* generation phase */
-                    (create_new_tetro(game), true)
+                    if game.playfield.new_active(game.next_tetro.pop()) {
+                        /* tetro can be placed in start position */
+                        (State::FallingPhase, true)
+                    } else {
+                        game.end_game.update();
+                        (State::GameOver, false)
+                    }
                 },
                 State::FallingPhase | State::LockedPhase => {
                     /* replace timeout drop with KeyDown event to simplify further handling */
@@ -208,6 +209,7 @@ pub mod engine {
                     game.score.update(removed_rows_count as u8);
                     game.fall.reset();
                     if game.score.goal_complete() {
+                        game.end_game.update();
                         (State::GameOver, true)
                     } else {
                         (State::GenerationPhase, true)
