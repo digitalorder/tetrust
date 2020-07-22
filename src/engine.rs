@@ -19,6 +19,7 @@ pub mod engine {
 
     #[derive(Clone, PartialEq)]
     pub enum State {
+        GenerationPhase,
         CompletionPhase,
         FallingPhase,
         LockedPhase,
@@ -31,6 +32,7 @@ pub mod engine {
     impl fmt::Display for State {
         fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
             let result = match self {
+                State::GenerationPhase => "generation",
                 State::FallingPhase => "falling",
                 State::CompletionPhase => "completion",
                 State::GameOver => "gameover",
@@ -173,6 +175,10 @@ pub mod engine {
         }
         while reschedule {
             let result = match game.state {
+                State::GenerationPhase => {
+                    /* generation phase */
+                    (create_new_tetro(game), true)
+                },
                 State::FallingPhase | State::LockedPhase => {
                     /* replace timeout drop with KeyDown event to simplify further handling */
                     let event = if event == Event::Timeout && game.fall.inc_frame_counter(game.score.level()) {
@@ -204,8 +210,7 @@ pub mod engine {
                     if game.score.goal_complete() {
                         (State::GameOver, true)
                     } else {
-                        /* generation phase */
-                        (create_new_tetro(game), false)
+                        (State::GenerationPhase, true)
                     }
                 },
                 State::GameOver => {
