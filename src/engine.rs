@@ -176,6 +176,7 @@ pub mod engine {
                         /* tetro can be placed in start position */
                         (State::FallingPhase, true)
                     } else {
+                        game.playtime.update();
                         game.end_game.update();
                         (State::GameOver, false)
                     }
@@ -209,6 +210,7 @@ pub mod engine {
                     game.score.update(removed_rows_count as u8);
                     game.fall.reset();
                     if game.score.goal_complete() {
+                        game.playtime.update();
                         game.end_game.update();
                         (State::GameOver, true)
                     } else {
