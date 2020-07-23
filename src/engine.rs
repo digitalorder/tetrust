@@ -165,7 +165,7 @@ pub mod engine {
 
     pub fn calculate_frame(game: &mut Game, event: Event) {
         let mut reschedule = true;
-        if event == Event::Timeout {
+        if event == Event::Timeout && game.state != State::AnimationPhase {
             game.playtime.update();
         }
         while reschedule {
