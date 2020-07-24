@@ -2,7 +2,7 @@ pub mod engine {
     use crate::view::{View, MAX_PREVIEW_SIZE};
     use crate::playfield as playfield;
     use crate::playfield_ctrl::{PlayfieldCtrl};
-    use crate::score_ctrl::{ScoreCtrl};
+    use crate::score_ctrl::{ScoreCtrl, Score};
     use crate::next_tetro_ctrl::{NextTetroCtrl};
     use crate::static_ctrl::{StaticCtrl};
     use crate::updateable_view::Ctrl;
@@ -121,6 +121,10 @@ pub mod engine {
         game.state == State::GameOver
     }
 
+    pub fn final_score(game: &Game) -> Score {
+        game.score.score()
+    }
+
     pub fn draw_frame(game: &mut Game, view: &mut impl View) {
         game.static_ctrl.show(view);
         game.score.show(view);
@@ -208,7 +212,7 @@ pub mod engine {
                     /* elimimination phase */
                     let removed_rows_count = game.playfield.remove_filled();
                     /* completion phase */
-                    game.score.update(removed_rows_count as u8);
+                    game.score.update(removed_rows_count as u8, game.playtime.frames());
                     game.fall.reset();
                     if game.score.goal_complete() {
                         (State::GameOver, true)
@@ -217,6 +221,7 @@ pub mod engine {
                     }
                 },
                 State::GameOver => {
+                    game.score.update(0, game.playtime.frames());
                     game.playtime.update();
                     game.end_game.update();
                     (State::GameOver, false)

@@ -6,12 +6,24 @@ use std::cmp;
 const MAX_LEVEL: i8 = 29;
 const SPRINT_LEVEL_GOAL: u32 = 40;
 
+#[derive(Debug)]
+pub enum Score {
+    Marathon{
+        level: i8,
+        score: u32,
+        lines_cleared: u32,
+        clear_statistic: [u32; 4]
+    },
+    Sprint{frames: u32},
+}
+
 pub struct ScoreCtrl {
     view: UpdatableView,
     level: i8,
     score: u32,
     lines_cleared: u32,
     clear_statistic: [u32; 4],
+    frames: u32,
     mode: Mode,
 }
 
@@ -35,7 +47,8 @@ impl ScoreCtrl {
         line_coeff * (level as u32 + 1)
     }
 
-    pub fn update(self: &mut Self, lines: u8) {
+    pub fn update(self: &mut Self, lines: u8, frames: u32) {
+        self.frames = frames;
         if lines > 0 {
             self.lines_cleared += lines as u32;
             self.level = cmp::max(self.level, (self.lines_cleared / 10) as i8);
@@ -56,6 +69,21 @@ impl ScoreCtrl {
         self.level
     }
 
+    pub fn score(self: &Self) -> Score {
+        if self.mode == Mode::Marathon {
+            Score::Marathon{
+                level: self.level,
+                score: self.score,
+                lines_cleared: self.lines_cleared,
+                clear_statistic: self.clear_statistic
+            }
+        } else {
+            Score::Sprint{
+                frames: self.frames
+            }
+        }
+    }
+
     pub fn new(level: i8, mode: Mode) -> Self {
         ScoreCtrl {
             view: UpdatableView::new(true),
@@ -64,6 +92,7 @@ impl ScoreCtrl {
             lines_cleared: 0,
             clear_statistic: Default::default(),
             mode: mode,
+            frames: 0,
         }
     }
 }

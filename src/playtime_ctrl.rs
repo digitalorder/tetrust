@@ -14,6 +14,10 @@ impl PlaytimeCtrl {
         }
     }
 
+    pub fn frames(self: &Self) -> u32 {
+        self.frame_counter
+    }
+
     pub fn new() -> Self {
         PlaytimeCtrl {
             frame_counter: 0,

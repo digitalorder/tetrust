@@ -56,6 +56,7 @@ fn do_game(no_ghost: bool, level: u8, next_queue_size: u8, mode: engine::Mode) {
         engine::draw_frame(&mut game, &mut view);
     }
 
+    print!("Final score: {:?}\n\r", engine::final_score(&game));
     write!(stdout, "{}", termion::cursor::Show).unwrap();
 }
 
