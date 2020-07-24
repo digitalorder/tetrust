@@ -54,10 +54,6 @@ fn do_game(no_ghost: bool, level: u8, next_queue_size: u8, mode: engine::Mode) {
         let event = rx.recv().unwrap();
         engine::calculate_frame(&mut game, event.clone());
         engine::draw_frame(&mut game, &mut view);
-
-        if event == engine::Event::KeyExit {
-            break;
-        }
     }
 
     write!(stdout, "{}", termion::cursor::Show).unwrap();

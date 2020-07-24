@@ -165,7 +165,10 @@ pub mod engine {
 
     pub fn calculate_frame(game: &mut Game, event: Event) {
         let mut reschedule = true;
-        if event == Event::Timeout && game.state != State::AnimationPhase {
+        if event == Event::KeyExit {
+            game.state = State::GameOver;
+        }
+        if event == Event::Timeout && game.state != State::AnimationPhase && game.state != State::GameOver {
             game.playtime.update();
         }
         while reschedule {
@@ -176,9 +179,7 @@ pub mod engine {
                         /* tetro can be placed in start position */
                         (State::FallingPhase, true)
                     } else {
-                        game.playtime.update();
-                        game.end_game.update();
-                        (State::GameOver, false)
+                        (State::GameOver, true)
                     }
                 },
                 State::FallingPhase | State::LockedPhase => {
@@ -210,15 +211,14 @@ pub mod engine {
                     game.score.update(removed_rows_count as u8);
                     game.fall.reset();
                     if game.score.goal_complete() {
-                        game.playtime.update();
-                        game.end_game.update();
                         (State::GameOver, true)
                     } else {
                         (State::GenerationPhase, true)
                     }
                 },
                 State::GameOver => {
-                    /* do nothing for now */
+                    game.playtime.update();
+                    game.end_game.update();
                     (State::GameOver, false)
                 }
             };
